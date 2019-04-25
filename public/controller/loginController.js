@@ -32,36 +32,36 @@ app.controller('LoginController', function ($scope, $location, $cookieStore, $co
         }
 
         if ($scope.acc && $scope.password) {
-            /*var dest = baseUrl + '/user/login';
-                $.ajax(dest, {
-                    type: "POST",
-                    data: $("#loginForm").serialize(),
-                    statusCode: {
-                        200: function (response) {
-                            //console.log(response.acc);
-                            var now = Date.now();
-                            var expiryDate = new Date();
-                            expiryDate.setTime(now + cookiesAlivePeriod);
-                            $cookies.put(cookies_username, response.acc, {
-                                'expires': expiryDate
-                            });
-                            $cookies.put(cookies_favouriteEvent, JSON.stringify(response.favouriteEvent), {
-                                'expires': expiryDate
-                            });
-                            $cookies.put(cookies_userid, response._id, {
-                                'expires': expiryDate
-                            });
-                            $location.path("user");
-                            $scope.$apply();
-                        },
-                        202: function (response) {
-                            alert(response);
-                        }
+            var dest = baseUrl + '/user/login';
+            $.ajax(dest, {
+                type: "POST",
+                data: $("#loginForm").serialize(),
+                statusCode: {
+                    200: function (response) {
+                        //console.log(response.acc);
+                        var now = Date.now();
+                        var expiryDate = new Date();
+                        expiryDate.setTime(now + cookiesAlivePeriod);
+                        $cookies.put(cookies_username, response.acc, {
+                            'expires': expiryDate
+                        });
+                        $cookies.put(cookies_favouriteEvent, JSON.stringify(response.favouriteEvent), {
+                            'expires': expiryDate
+                        });
+                        $cookies.put(cookies_userid, response._id, {
+                            'expires': expiryDate
+                        });
+                        $location.path("user");
+                        $scope.$apply();
                     },
-                    error: function (err) {
-                        alert(err);
+                    202: function (response) {
+                        alert(response);
                     }
-                });*/
+                },
+                error: function (err) {
+                    alert(err);
+                }
+            });
         } else {
             window.alert("Please enter all fields!");
         }

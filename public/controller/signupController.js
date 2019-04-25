@@ -3,7 +3,7 @@ app.controller('SignUpController', function ($scope, $location, $cookieStore, $c
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
 
-    $scope.loginForm = document.getElementById("loginForm");
+    $scope.signUpForm = document.getElementById("signUpForm");
     $scope.userInfo = {
         username: "",
         pwd: "",
@@ -11,22 +11,22 @@ app.controller('SignUpController', function ($scope, $location, $cookieStore, $c
         dob: "",
         isStudent: 0
     }
-    $scope.submitForm = function (role) {
+    $scope.signUpForm.onsubmit = function (role) {
         //console.log("form submitted", $scope.loginForm.acc.value, $scope.loginForm.pwd.value);
-        e.preventDefault();
-        console.dir($scope.userInfo);
+
         if (role == 'student') {
             $scope.userInfo.isStudent = 1;
         } else {
             $scope.userInfo.isStudent = 0;
         }
+        console.dir($scope.userInfo);
         if ($scope.userInfo.username != "" && $scope.userInfo.pwd != "" && $scope.userInfo.gender != "" && $scope.userInfo.dob != "") {
             var dest = baseUrl + '/SignUp';
             $.ajax(dest, {
                 type: "POST",
                 data: $scope.userInfo,
                 statusCode: {
-                    200: function (response) {
+                    /*200: function (response) {
                         //console.log(response.acc);
                         var now = Date.now();
                         var expiryDate = new Date();
@@ -45,7 +45,7 @@ app.controller('SignUpController', function ($scope, $location, $cookieStore, $c
                     },
                     202: function (response) {
                         alert(response);
-                    }
+                    }*/
                 },
                 error: function (err) {
                     alert(err);
