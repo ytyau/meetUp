@@ -31,8 +31,8 @@ async function connectDB() {
 connectDB();
 /********** Connect DB End **********/
 
-/********** Registration Start **********/
-app.post('/registration', async function (req, res) {
+/********** SignUp Start **********/
+app.post('/SignUp', async function (req, res) {
 	var username = req.body['username'];
     var pwd = req.body['pwd'];
     var isStudent = req.body['isStudent'];
@@ -78,10 +78,10 @@ app.post('/registration', async function (req, res) {
         }
 	}
 });
-/********** Registration End **********/
+/********** SignUp End **********/
 
-/********** Login End **********/
-app.post('/login', async function (req, res) {
+/********** SignIn End **********/
+app.post('/SignIn', async function (req, res) {
 	var username = req.body['username'];
     var pwd = req.body['pwd'];
 
@@ -114,7 +114,46 @@ app.post('/login', async function (req, res) {
         }
 	}
 });
-/********** Login End **********/
+/********** SignIn End **********/
+
+/********** Create Event Start **********/
+app.post('/createEvent', async function (req, res) {
+    var memberId = req.body['memberId'];
+    var eventDatetime = req.body['eventDatetime'];
+    var repeatBy = req.body['repeatBy'];
+    var location = req.body['location'];
+    var vacancy = req.body['vacancy'];
+    var maxParticipant = req.body['maxParticipant'];
+    var level = req.body['level'];
+    var title = req.body['title'];
+    var content = req.body['content'];
+
+    if (!memberId || !eventDatetime || !repeatBy || !location || !vacancy || !maxParticipant || !level || !title || ! content)
+    {
+		res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var query = "";
+            // console.log(query);
+            var result = await sql.query(query);
+            // console.dir(result);
+            if (result.recordset.length > 0)
+                res.send('Success');
+            else
+                res.status(400).send('The password is not correct or the account is not exist.');
+        }
+        catch(err)
+        {
+            console.log('Error occurred in registration');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+	}
+});
+/********** Create Event End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
