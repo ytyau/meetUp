@@ -1,4 +1,4 @@
-app.controller('SignUpController', function ($scope, $location, $cookieStore, $cookies) {
+app.controller('SignUpController', function ($scope, $location, $cookieStore, $cookies, $filter) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
@@ -14,21 +14,23 @@ app.controller('SignUpController', function ($scope, $location, $cookieStore, $c
     $scope.signUpForm.onsubmit = function (role) {
         //console.log("form submitted", $scope.loginForm.acc.value, $scope.loginForm.pwd.value);
 
+        var postData = angular.copy($scope.userInfo);
+        postData.dob = $filter('date')(postData.dob, 'yyyy-MM-dd')
         if (role == 'student') {
-            $scope.userInfo.isStudent = 1;
+            postData.isStudent = 1;
         } else {
-            $scope.userInfo.isStudent = 0;
+            postData.isStudent = 0;
         }
-        console.dir($scope.userInfo);
-        if ($scope.userInfo.username != "" && $scope.userInfo.pwd != "" && $scope.userInfo.gender != "" && $scope.userInfo.dob != "") {
+        //console.dir(postData);
+        if (postData.username != "" && postData.pwd != "" && postData.gender != "" && postData.dob != "") {
             var dest = baseUrl + '/SignUp';
             $.ajax(dest, {
                 type: "POST",
-                data: $scope.userInfo,
+                data: postData,
                 statusCode: {
-                    /*200: function (response) {
-                        //console.log(response.acc);
-                        var now = Date.now();
+                    200: function (response) {
+                        console.log(response);
+                        /*var now = Date.now();
                         var expiryDate = new Date();
                         expiryDate.setTime(now + cookiesAlivePeriod);
                         $cookies.put(cookies_username, response.acc, {
@@ -41,11 +43,11 @@ app.controller('SignUpController', function ($scope, $location, $cookieStore, $c
                             'expires': expiryDate
                         });
                         $location.path("user");
-                        $scope.$apply();
+                        $scope.$apply();*/
                     },
                     202: function (response) {
                         alert(response);
-                    }*/
+                    }
                 },
                 error: function (err) {
                     alert(err);

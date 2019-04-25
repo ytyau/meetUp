@@ -2,20 +2,20 @@ app.controller('LoginController', function ($scope, $location, $cookieStore, $co
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
-
+    const cookies_memberInfo = "username";
+    const cookies_memberId = "memberId";
     /*********** Check if Logged in Start ***********/
-    /*const cookies_username = "username";
-    const cookies_favouriteEvent = "favouriteEvent"
-    const cookies_userid = "userId";
 
-    if ($cookies.get(cookies_username)) {
-        if ($cookies.get(cookies_username) == "IamAdminHaHaHa") {
-            $location.path("admin");
-            $scope.$apply();
+
+    if ($cookies.get(cookies_memberInfo)) {
+        if ($cookies.get(cookies_memberInfo)) {
+            //$location.path("admin");
+            console.log("Signed In")
+            //$scope.$apply();
         } else {
-            $location.path("user");
+            //$location.path("user");
         }
-    }*/
+    }
     /*********** Check if Logged in End ***********/
 
 
@@ -24,35 +24,26 @@ app.controller('LoginController', function ($scope, $location, $cookieStore, $co
     $scope.pwd;
     $scope.loginForm.onsubmit = function (role) {
         //console.log("form submitted", $scope.loginForm.acc.value, $scope.loginForm.pwd.value);
-        var isStudent;
-        if (role == 'student') {
-            isStudent = 1;
-        } else {
-            isStudent = 0;
-        }
 
-        if ($scope.acc && $scope.password) {
-            var dest = baseUrl + '/user/login';
+        if ($scope.username && $scope.pwd) {
+            var dest = baseUrl + '/SignIn';
             $.ajax(dest, {
                 type: "POST",
                 data: $("#loginForm").serialize(),
                 statusCode: {
                     200: function (response) {
-                        //console.log(response.acc);
+                        console.log(response);
                         var now = Date.now();
                         var expiryDate = new Date();
                         expiryDate.setTime(now + cookiesAlivePeriod);
-                        $cookies.put(cookies_username, response.acc, {
+                        $cookies.put(cookies_memberId, response.MemberID, {
                             'expires': expiryDate
                         });
-                        $cookies.put(cookies_favouriteEvent, JSON.stringify(response.favouriteEvent), {
+                        $cookies.put(cookies_memberInfo, JSON.stringify(response), {
                             'expires': expiryDate
                         });
-                        $cookies.put(cookies_userid, response._id, {
-                            'expires': expiryDate
-                        });
-                        $location.path("user");
-                        $scope.$apply();
+                        //$location.path("user");
+                        //$scope.$apply();
                     },
                     202: function (response) {
                         alert(response);
@@ -62,6 +53,7 @@ app.controller('LoginController', function ($scope, $location, $cookieStore, $co
                     alert(err);
                 }
             });
+            return false;
         } else {
             window.alert("Please enter all fields!");
         }

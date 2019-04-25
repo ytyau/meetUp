@@ -24,22 +24,18 @@
             <div class="form-group row">
                 <label for="username" class="col-sm-2 col-form-label">Username</label>
                 <div class="col-sm-10">
-                    <input type="text" name="acc" class="form-control" placeholder="Enter username" id="username"
-                        [(ngModel)]="username">
+                    <input type="text" name="username" class="form-control" placeholder="Enter username" id="username"
+                        ng-model="username">
                 </div>
             </div>
             <div class="form-group row">
                 <label for="password" class="col-sm-2 col-form-label">Password</label>
                 <div class="col-sm-10">
                     <input type="password" name="pwd" class="form-control" id="password" placeholder="Enter password"
-                        [(ngModel)]="pwd">
+                        ng-model="pwd">
                 </div>
             </div>
-            <button class="btn btn-dark btn-block" ng-click="submitForm('student')" style="color: white">Sign in as
-                student</button>
-            <button class="btn btn-outline-dark btn-block" ng-click="submitForm('tutor')">Sign in
-                as
-                tutor</button>
+            <button class="btn btn-dark btn-block" ng-click="submitForm('student')" style="color: white">Login</button>
         </form>
     </div>
 </body>
