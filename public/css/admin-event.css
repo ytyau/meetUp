@@ -1,0 +1,21 @@
+html {
+    scroll-behavior: smooth;
+}
+
+#goToTop {
+    display: none;
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    z-index: 99;
+    border: 1px solid grey;
+    outline: none;
+    background-color: white;
+    cursor: pointer;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+#goToTop:hover {
+    background-color: #555;
+}
