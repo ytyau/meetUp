@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname, '/../public')));
 
 var crypto = require('crypto');
 
-var CONFIG = require('config.json');
+var CONFIG = require('./config.json');
 
 const sql = require('mssql')
 /********** Requrire End **********/
@@ -20,7 +20,7 @@ const sql = require('mssql')
 /********** Connect DB Start **********/
 async () => {
     try {
-        await sql.connect('mssql://username:password@localhost/database')
+        await sql.connect('mssql://' + CONFIG.dbAcc + ':' + CONFIG.dbPwd + '@' + CONFIG.dbHost + '/' + CONFIG.dbName);
         const result = await sql.query`select * from mytable where id = ${value}`
         console.dir(result)
     } catch (err) {
@@ -28,3 +28,14 @@ async () => {
     }
 }
 /********** Connect DB End **********/
+
+/********** Website Start **********/
+app.all('/', function (req, res) {
+	// send this to client
+	res.status(200).sendFile(path.join(__dirname + '/../public/index.html'));
+});
+module.exports = app;
+
+// listen to port 3000
+var server = app.listen(3000);
+/********** Website End **********/
