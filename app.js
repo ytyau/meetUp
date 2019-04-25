@@ -80,6 +80,42 @@ app.post('/registration', async function (req, res) {
 });
 /********** Registration End **********/
 
+/********** Login End **********/
+app.post('/login', async function (req, res) {
+	var username = req.body['username'];
+    var pwd = req.body['pwd'];
+
+    if (!username || !pwd)
+    {
+		res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var shasum = crypto.createHash('sha1');
+            shasum.update(pwd);
+            var hashedPwd = shasum.digest('hex');
+
+            var query = "Select MemberID from Member where Username = '" + username + "' And Password = '" + hashedPwd + "'";
+            // console.log(query);
+            var result = await sql.query(query);
+            // console.dir(result);
+            if (result.recordset.length > 0)
+                res.send('Success');
+            else
+                res.status(400).send('The password is not correct or the account is not exist.');
+        }
+        catch(err)
+        {
+            console.log('Error occurred in registration');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+	}
+});
+/********** Login End **********/
+
 /********** Website Start **********/
 app.all('/', function (req, res) {
 	// send this to client
