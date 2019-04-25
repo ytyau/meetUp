@@ -94,7 +94,7 @@ app.post('/SignIn', async function (req, res) {
             else
                 res.status(400).send('The password is not correct or the account is not exist.');
         } catch (err) {
-            console.log('Error occurred in registration');
+            console.log('Error occurred in signin');
             console.dir(err);
             res.status(500).send(err);
         }
@@ -103,18 +103,18 @@ app.post('/SignIn', async function (req, res) {
 /********** SignIn End **********/
 
 /********** Create Event Start **********/
-app.post('/createEvent', async function (req, res) {
+app.post('/CreateEvent', async function (req, res) {
     var memberId = req.body['memberId'];
     var eventDatetime = req.body['eventDatetime'];
     var repeatBy = req.body['repeatBy'];
     var location = req.body['location'];
-    var vacancy = req.body['vacancy'];
+    var minParticipant = req.body['minParticipant'];
     var maxParticipant = req.body['maxParticipant'];
     var level = req.body['level'];
     var title = req.body['title'];
     var content = req.body['content'];
 
-    if (!memberId || !eventDatetime || !repeatBy || !location || !vacancy || !maxParticipant || !level || !title || ! content)
+    if (!memberId || !eventDatetime || !repeatBy || !location || !minParticipant || !maxParticipant || !level || !title || ! content)
     {
 		res.status(400).send("Please specify all fields.");
     }
@@ -122,16 +122,35 @@ app.post('/createEvent', async function (req, res) {
     {
         try
         {
-            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, EventDatetime, RepeatBy, Location, Vacancy, MaxParticipant, Level, Title, Content, IsClosed, PickedUpBy, CreatedAt) VALUES ('DEFAULT', null, null, null, null, null, null, null, null, DEFAULT, 'NULL', 'DEFAULT');";
-            // console.log(query);
+            var eventId = uuidv1();
+            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content) VALUES ('" + eventId + "', '" + eventDatetime + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + level + "', '" + title + "', '" + content + "');";
+            console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
-            if (result.recordset.length > 0)
-                res.send('Success');
+            if (result.rowsAffected > 0)
+            {
+                query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
+                result = await sql.query(query);
+                if (result.rowsAffected > 0)
+                {
+                    res.send("Success");
+                }
+                else
+                {
+                    console.log(query);
+                    res.status(500).send('Error occurred in join event');
+                }
+            }
             else
-                res.status(400).send('The password is not correct or the account is not exist.');
-        } catch (err) {
-            console.log('Error occurred in registration');
+            {
+                console.log('Error occurred in create event')
+                console.log(query);
+                res.status(500).send('Server error.');
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in create event');
             console.dir(err);
             res.status(500).send(err);
         }
