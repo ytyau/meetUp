@@ -18,16 +18,67 @@ const sql = require('mssql')
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
-async () => {
+async function connectDB() {
     try {
-        await sql.connect('mssql://' + CONFIG.dbAcc + ':' + CONFIG.dbPwd + '@' + CONFIG.dbHost + '/' + CONFIG.dbName);
-        const result = await sql.query`select * from mytable where id = ${value}`
-        console.dir(result)
+        await sql.connect('mssql://' + CONFIG.dbAcc + ':' + CONFIG.dbPwd + '@' + CONFIG.dbHost + '/' + CONFIG.dbName + '?encrypt=true');
+        const result = await sql.query('select * from Member');
+        // console.dir(result);
     } catch (err) {
-        // ... error checks
+        console.log('Error occurred when connecting to db');
+        console.dir(err);
     }
 }
+connectDB();
 /********** Connect DB End **********/
+
+/********** Registration Start **********/
+app.post('/registration', async function (req, res) {
+	var username = req.body['username'];
+    var pwd = req.body['pwd'];
+    var isStudent = req.body['isStudent'];
+    var gender = req.body['gender'];
+    var dob = req.body['dob']
+
+    if (!username || !pwd || !isStudent || !gender || !dob)
+    {
+		res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select MemberID from Member where Username = '" + username + "'");
+            // console.dir(result);
+            if (result.recordset.length > 0)
+            {
+                res.status(400).send('This username is already existed. Please use another name.');
+            }
+            else
+            {
+                var shasum = crypto.createHash('sha1');
+                shasum.update(pwd);
+                var hashedPwd = shasum.digest('hex');
+                var query = "INSERT INTO Member (Username, Password, IsStudent, Gender, DOB) VALUES ('" + username + "', '" + hashedPwd + "', " + isStudent + ", '" + gender + "', '" + dob + "');";
+                // console.log(query);
+                var result = await sql.query(query);
+                if (result.rowsAffected > 0)
+                    res.send('Success');
+                else
+                {
+                    console.dir(result);
+                    res.status(500).send('Unknown error occurred.');
+                }
+            }
+        }
+        catch(err)
+        {
+            console.log('Error occurred in registration');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+	}
+});
+/********** Registration End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
