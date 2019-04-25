@@ -1,0 +1,9 @@
+body {
+    height: 100vh;
+}
+
+/*TODO:vertical alignment*/
+.vertical-align {
+    position: absolute;
+    top: 25%;
+}
