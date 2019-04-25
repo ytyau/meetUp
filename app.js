@@ -15,6 +15,8 @@ var crypto = require('crypto');
 var CONFIG = require('./config.json');
 
 const sql = require('mssql')
+
+const uuidv1 = require('uuid/v1');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -97,12 +99,12 @@ app.post('/SignIn', async function (req, res) {
             shasum.update(pwd);
             var hashedPwd = shasum.digest('hex');
 
-            var query = "Select MemberID from Member where Username = '" + username + "' And Password = '" + hashedPwd + "'";
+            var query = "Select MemberID, Username, Password, Gender, DOB, CreatedAt from Member where Username = '" + username + "' And Password = '" + hashedPwd + "'";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
             if (result.recordset.length > 0)
-                res.send('Success');
+                res.send(result.recordset[0]);
             else
                 res.status(400).send('The password is not correct or the account is not exist.');
         }
@@ -136,7 +138,7 @@ app.post('/createEvent', async function (req, res) {
     {
         try
         {
-            var query = "";
+            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, EventDatetime, RepeatBy, Location, Vacancy, MaxParticipant, Level, Title, Content, IsClosed, PickedUpBy, CreatedAt) VALUES ('DEFAULT', null, null, null, null, null, null, null, null, DEFAULT, 'NULL', 'DEFAULT');";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
