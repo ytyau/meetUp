@@ -85,7 +85,7 @@ app.post('/SignIn', async function (req, res) {
             shasum.update(pwd);
             var hashedPwd = shasum.digest('hex');
 
-            var query = "Select MemberID, Username, Password, Gender, DOB, CreatedAt from Member where Username = '" + username + "' And Password = '" + hashedPwd + "'";
+            var query = "Select MemberID, Username, Password, Gender, DOB, AccCreatedAt from Member where Username = '" + username + "' And Password = '" + hashedPwd + "'";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
@@ -110,11 +110,12 @@ app.post('/CreateEvent', async function (req, res) {
     var location = req.body['location'];
     var minParticipant = req.body['minParticipant'];
     var maxParticipant = req.body['maxParticipant'];
+    var course = req.body['course'];
     var level = req.body['level'];
     var title = req.body['title'];
     var content = req.body['content'];
 
-    if (!memberId || !eventDatetime || !repeatBy || !location || !minParticipant || !maxParticipant || !level || !title || ! content)
+    if (!memberId || !eventDatetime || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || ! content)
     {
 		res.status(400).send("Please specify all fields.");
     }
@@ -123,7 +124,7 @@ app.post('/CreateEvent', async function (req, res) {
         try
         {
             var eventId = uuidv1();
-            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content) VALUES ('" + eventId + "', '" + eventDatetime + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + level + "', '" + title + "', '" + content + "');";
+            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + eventDatetime + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
             console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
@@ -137,7 +138,7 @@ app.post('/CreateEvent', async function (req, res) {
                 }
                 else
                 {
-                    console.log(query);
+                    // console.log(query);
                     res.status(500).send('Error occurred in join event');
                 }
             }
@@ -157,6 +158,54 @@ app.post('/CreateEvent', async function (req, res) {
     }
 });
 /********** Create Event End **********/
+
+/********** Get Event Start **********/
+app.get('/GetEvent', async function (req, res)
+{
+    var top = req.query.top;
+    var offset = req.query.offset;
+    var isGetAll = req.query.isGetAll;
+    var memberId = req.query.memberId;
+    var eventId = req.query.eventId;
+    
+    if (!top || !offset)
+    {
+        res.status(400).send("Please specify top and offset");
+    }
+
+    if (!isGetAll && !memberId && !eventId)
+    {
+        res.status(400).send("Please specify one of these fields: isGetAll, memberId, eventId");
+    }
+    else
+    {
+        try
+        {
+            var query = "";
+            if (isGetAll)
+            {
+               query = "Select Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, IsClosed, PickedUpBy, EventCreatedAt, Course From Event Where IsClosed = 0 Order By EventCreatedAt DESC Offset " + offset + " Rows Fetch Next " + top  +" Rows Only";
+            }
+            else if (memberId)
+            {
+                query = "Select Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt From Event, JoinEvent Where MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0 Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
+            }
+            else
+            {
+                query = "Select * from Event Where EventID = '" + eventId +  "'";
+            }
+            var result = await sql.query(query);
+            res.send(result.recordset);
+        }
+        catch (err)
+        {
+            console.log('Error occurred in GetEvent');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Get Event End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
