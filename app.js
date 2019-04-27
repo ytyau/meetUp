@@ -181,21 +181,48 @@ app.get('/GetEvent', async function (req, res)
     {
         try
         {
-            var query = "";
+            var selectItem = "";
+            var fromTable = "";
+            var condition = "";
+            var orderBy = "";
             if (isGetAll)
             {
-               query = "Select Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, IsClosed, PickedUpBy, EventCreatedAt, Course From Event Where IsClosed = 0 Order By EventCreatedAt DESC Offset " + offset + " Rows Fetch Next " + top  +" Rows Only";
+                selectItem = "Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, IsClosed, PickedUpBy, EventCreatedAt, Course";
+                fromTable = "Event";
+                condition = "IsClosed = 0";
+                orderBy = " Order By EventCreatedAt DESC Offset " + offset + " Rows Fetch Next " + top  +" Rows Only";
             }
             else if (memberId)
             {
-                query = "Select Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt From Event, JoinEvent Where MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0 Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
+                selectItem = "Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
+                fromTable = "Event, JoinEvent";
+                condition = "MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0";
+                orderBy = " Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
             }
             else
             {
-                query = "Select * from Event Where EventID = '" + eventId +  "'";
+                selectItem = "*";
+                fromTable = "Event";
+                condition = "EventID = '" + eventId +  "'";
             }
+
+            /********** Query Total Number of Record ***********/
+            var query = "Select count(*) as TotalRecords From " + fromTable + " Where " + condition;
+            // console.log(query);
             var result = await sql.query(query);
-            res.send(result.recordset);
+            // console.dir(result);
+            var totalRecords = result.recordset[0].TotalRecords;
+            /********** Query Total Number of Record ***********/
+
+            /********** Query Event ***********/
+            query = "Select " + selectItem + " From " + fromTable + " Where " + condition + orderBy;
+            result = await sql.query(query);
+            /********** Query Event ***********/
+
+            var returnObj = {};
+            returnObj.totalRecords = totalRecords;
+            returnObj.recordsets = result.recordsets;
+            res.send(returnObj);
         }
         catch (err)
         {
@@ -206,6 +233,34 @@ app.get('/GetEvent', async function (req, res)
     }
 });
 /********** Get Event End **********/
+
+/********** Search Event Start **********/
+app.get('/SearchEvent', async function (req, res)
+{
+    var queryParam = req.query.queryParam;
+    var queryParam = req.query.queryParam;
+    var queryParam = req.query.queryParam;
+    
+    if (!queryParam || !formField)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select Sth Here"); // Check: if (result.recordset.length > 0)
+            var result = await sql.query("INSERT INTO ..."); // Check: if (result.rowsAffected > 0)
+        }
+        catch (err)
+        {
+            console.log('Error occurred in SearchEvent');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Search Event End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
