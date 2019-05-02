@@ -187,14 +187,14 @@ app.get('/GetEvent', async function (req, res)
             var orderBy = "";
             if (isGetAll)
             {
-                selectItem = "Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, IsClosed, PickedUpBy, EventCreatedAt, Course";
+                selectItem = "*";
                 fromTable = "Event";
                 condition = "IsClosed = 0";
                 orderBy = " Order By EventCreatedAt DESC Offset " + offset + " Rows Fetch Next " + top  +" Rows Only";
             }
             else if (memberId)
             {
-                selectItem = "Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
+                selectItem = "Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
                 fromTable = "Event, JoinEvent";
                 condition = "MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0";
                 orderBy = " Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
@@ -237,11 +237,13 @@ app.get('/GetEvent', async function (req, res)
 /********** Search Event Start **********/
 app.get('/SearchEvent', async function (req, res)
 {
-    var queryParam = req.query.queryParam;
-    var queryParam = req.query.queryParam;
-    var queryParam = req.query.queryParam;
+    var top = req.query.top;
+    var offset = req.query.offset;
+    var course = req.query.course;
+    var level = req.query.level;
+    var repeatBy = req.query.repeatBy;
     
-    if (!queryParam || !formField)
+    if (!course || !level || !repeatBy)
     {
         res.status(400).send("Please specify all fields.");
     }
@@ -249,8 +251,23 @@ app.get('/SearchEvent', async function (req, res)
     {
         try
         {
-            var result = await sql.query("Select Sth Here"); // Check: if (result.recordset.length > 0)
-            var result = await sql.query("INSERT INTO ..."); // Check: if (result.rowsAffected > 0)
+            /********** Query Total Number of Record ***********/
+            var query = "Select count(*) as TotalRecords From Event Where Course = '" + course + "' And Level = '" + level + "' And RepeatBy = '" + repeatBy + "'";
+            // console.log(query);
+            var result = await sql.query(query);
+            // console.dir(result);
+            var totalRecords = result.recordset[0].TotalRecords;
+            /********** Query Total Number of Record ***********/
+
+            /********** Query Event ***********/
+            query = "Select * From Event Where Course = '" + course + "' And Level = '" + level + "' And RepeatBy = '" + repeatBy + "' Order By EventCreatedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
+            result = await sql.query(query);
+            /********** Query Event ***********/
+
+            var returnObj = {};
+            returnObj.totalRecords = totalRecords;
+            returnObj.recordsets = result.recordsets;
+            res.send(returnObj);
         }
         catch (err)
         {
@@ -261,6 +278,56 @@ app.get('/SearchEvent', async function (req, res)
     }
 });
 /********** Search Event End **********/
+
+/********** Join Event End **********/
+app.post('/JoinEvent', async function (req, res)
+{
+    var memberId = req.body['memberId'];
+    var eventId = req.body['eventId'];
+    
+    if (!memberId || !eventId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select MaxParticipant, CurrentMemberCnt, IsClosed From Event Where EventID = '" + eventId + "'"); // Check: if (result.recordset.length > 0)
+            if (result.recordset.length > 0)
+            {
+                if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed)
+                {
+                    query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
+                    result = await sql.query(query);
+                    if (result.rowsAffected > 0)
+                    {
+                        res.send("Success");
+                    }
+                    else
+                    {
+                        res.status(500).send("Fail to join event with eventId =" + eventId + ", memberId  = " + memberId);
+                    }
+                }
+                else
+                {
+                    res.status(400).send("Exceed max participants limit.");
+                }
+            }
+            else
+            {
+                res.status(400).send("Cannot find a event with ID = " + eventId);
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in JoinEvent');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Join Event End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
