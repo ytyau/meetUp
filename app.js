@@ -105,7 +105,7 @@ app.post('/SignIn', async function (req, res) {
 /********** Create Event Start **********/
 app.post('/CreateEvent', async function (req, res) {
     var memberId = req.body['memberId'];
-    var eventDatetime = req.body['eventDatetime'];
+    var availableTime = req.body['availableTime'];
     var repeatBy = req.body['repeatBy'];
     var location = req.body['location'];
     var minParticipant = req.body['minParticipant'];
@@ -115,7 +115,7 @@ app.post('/CreateEvent', async function (req, res) {
     var title = req.body['title'];
     var content = req.body['content'];
 
-    if (!memberId || !eventDatetime || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || ! content)
+    if (!memberId || !availableTime || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || !content)
     {
 		res.status(400).send("Please specify all fields.");
     }
@@ -124,8 +124,8 @@ app.post('/CreateEvent', async function (req, res) {
         try
         {
             var eventId = uuidv1();
-            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + eventDatetime + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
-            console.log(query);
+            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + availableTime + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
+            // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
             if (result.rowsAffected > 0)
@@ -284,8 +284,9 @@ app.post('/JoinEvent', async function (req, res)
 {
     var memberId = req.body['memberId'];
     var eventId = req.body['eventId'];
+    var availableTime = req.body['availableTime'];
     
-    if (!memberId || !eventId)
+    if (!memberId || !eventId || !availableTime)
     {
         res.status(400).send("Please specify all fields.");
     }
@@ -298,15 +299,24 @@ app.post('/JoinEvent', async function (req, res)
             {
                 if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed)
                 {
-                    query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
+                    query = "Update Event Set AvailableTime = '" + availableTime + "' Where EventID = '" + eventId + "'";
                     result = await sql.query(query);
                     if (result.rowsAffected > 0)
                     {
-                        res.send("Success");
+                        query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
+                        result = await sql.query(query);
+                        if (result.rowsAffected > 0)
+                        {
+                            res.send("Success");
+                        }
+                        else
+                        {
+                            res.status(500).send("Fail to join event with eventId =" + eventId + ", memberId  = " + memberId);
+                        }
                     }
                     else
                     {
-                        res.status(500).send("Fail to join event with eventId =" + eventId + ", memberId  = " + memberId);
+                        res.status(500).send("Fail to update event AvailableTime with eventId =" + eventId + ", availableTime  = " + availableTime );
                     }
                 }
                 else
