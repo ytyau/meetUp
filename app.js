@@ -372,6 +372,68 @@ app.post('/QuitEvent', async function (req, res)
 });
 /********** Quit Event End **********/
 
+/********** Post Discussion Stat **********/
+app.post('/PostDiscussion', async function (req, res)
+{
+    var memberId = req.body['memberId'];
+    var eventId = req.body['eventId'];
+    var discussTitle = req.body['discussTitle'];
+    var discussContent = req.body['discussContent'];
+    
+    if (!memberId || !eventId ||!discussTitle || !discussContent)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Insert Into Discussion (EventID, MemberID, DiscussTitle, DiscussContent) Values ('" + eventId + "', '" + memberId + "', '" + discussTitle + "', '" + discussContent + "')");
+            if (result.rowsAffected > 0)
+            {
+                res.send("Success");
+            }
+            else
+            {
+                res.status(400).send("Fail to post discussion for memberId = " + memberId + ", eventId = " + eventId + ", discussionTitle = " + discussTitle + ", discussionContent = " + discussContent);
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in PostDiscussion');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Post Discussion End **********/
+
+/********** Get Discussion Start **********/
+app.get('/GetDiscussion', async function (req, res)
+{
+    var eventId = req.query.eventId;
+    
+    if (!eventId)
+    {
+        res.status(400).send("Please specify eventId");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select Username, DiscussTitle, DiscussContent, DiscussionCreatedAt From Discussion, Member Where EventID = '" + eventId + "' And Member.MemberID = Discussion.MemberID");
+            res.send(result.recordset);
+        }
+        catch (err)
+        {
+            console.log('Error occurred in GetDiscussion');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Get Discussion End **********/
+
 /********** Website Start **********/
 app.all('/', function (req, res) {
     // send this to client
