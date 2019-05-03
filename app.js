@@ -194,7 +194,7 @@ app.get('/GetEvent', async function (req, res)
             }
             else if (memberId)
             {
-                selectItem = "Event.EventID, EventDatetime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
+                selectItem = "Event.EventID, AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
                 fromTable = "Event, JoinEvent";
                 condition = "MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0";
                 orderBy = " Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
@@ -279,7 +279,7 @@ app.get('/SearchEvent', async function (req, res)
 });
 /********** Search Event End **********/
 
-/********** Join Event End **********/
+/********** Join Event Start **********/
 app.post('/JoinEvent', async function (req, res)
 {
     var memberId = req.body['memberId'];
@@ -338,6 +338,39 @@ app.post('/JoinEvent', async function (req, res)
     }
 });
 /********** Join Event End **********/
+
+/********** Quit Event Stat **********/
+app.post('/QuitEvent', async function (req, res)
+{
+    var joinId = req.body['joinId'];
+    
+    if (!joinId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Update JoinEvent Set IsQuit = 1 Where JoinID = '" + joinId + "'");
+            if (result.rowsAffected > 0)
+            {
+                res.send("Success");
+            }
+            else
+            {
+                res.status(400).send("Fail to quit group for joinId = " + joinId);
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in QuitEvent');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Quit Event End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
