@@ -120,6 +120,39 @@ function SendVerificationMail(toMail, memberId)
 }
 /********** Send Mail End **********/
 
+/********** Mail Verification Start **********/
+app.get('/MailVerification', async function (req, res)
+{
+    var token = req.query.token;
+    
+    if (!token)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Update Member Set IsVerified = 1 Where MemberID = '" + token + "'");
+            if (result.rowsAffected > 0)
+            {
+                res.send("Success");
+            }
+            else
+            {
+                res.status(400).send("This url is not valid.");
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in MailVerification');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Mail Verification End **********/
+
 /********** SignIn End **********/
 app.post('/SignIn', async function (req, res) {
     var email = req.body['email'];
