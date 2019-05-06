@@ -40,30 +40,41 @@ app.post('/SignUp', async function (req, res) {
     var isStudent = req.body['isStudent'];
     var gender = req.body['gender'];
     var dob = req.body['dob']
+    var email = req.body['email']
 
-    if (!username || !pwd || !isStudent || !gender || !dob) {
+    if (!username || !pwd || !isStudent || !gender || !dob || !email)
+    {
         res.status(400).send("Please specify all fields.");
-    } else {
-        try {
-            var result = await sql.query("Select MemberID from Member where Username = '" + username + "'");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select MemberID from Member where Email = '" + email + "'");
             // console.dir(result);
-            if (result.recordset.length > 0) {
-                res.status(400).send('This username is already existed. Please use another name.');
-            } else {
+            if (result.recordset.length > 0)
+            {
+                res.status(400).send('This email has been registered. Please use another email.');
+            }
+            else
+            {
                 var shasum = crypto.createHash('sha1');
                 shasum.update(pwd);
                 var hashedPwd = shasum.digest('hex');
-                var query = "INSERT INTO Member (Username, Password, IsStudent, Gender, DOB) VALUES ('" + username + "', '" + hashedPwd + "', " + isStudent + ", '" + gender + "', '" + dob + "');";
+                var query = "INSERT INTO Member (Username, Password, IsStudent, Gender, DOB, Email) VALUES ('" + username + "', '" + hashedPwd + "', " + isStudent + ", '" + gender + "', '" + dob + "', '" + email + "');";
                 // console.log(query);
                 var result = await sql.query(query);
                 if (result.rowsAffected > 0)
                     res.send('Success');
-                else {
+                else
+                {
                     console.dir(result);
                     res.status(500).send('Unknown error occurred.');
                 }
             }
-        } catch (err) {
+        }
+        catch (err)
+        {
             console.log('Error occurred in registration');
             console.dir(err);
             res.status(500).send(err);
@@ -74,10 +85,10 @@ app.post('/SignUp', async function (req, res) {
 
 /********** SignIn End **********/
 app.post('/SignIn', async function (req, res) {
-    var username = req.body['username'];
+    var email = req.body['email'];
     var pwd = req.body['pwd'];
 
-    if (!username || !pwd) {
+    if (!email || !pwd) {
         res.status(400).send("Please specify all fields.");
     } else {
         try {
@@ -85,15 +96,26 @@ app.post('/SignIn', async function (req, res) {
             shasum.update(pwd);
             var hashedPwd = shasum.digest('hex');
 
-            var query = "Select MemberID, Username, Password, Gender, DOB, AccCreatedAt from Member where Username = '" + username + "' And Password = '" + hashedPwd + "'";
+            var query = "Select MemberID, Username, Password, Gender, DOB, AccCreatedAt, Email, IsVerified from Member where Email = '" + email + "' And Password = '" + hashedPwd + "'";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
             if (result.recordset.length > 0)
-                res.send(result.recordset[0]);
+            {
+                if (result.recordset[0].IsVerified)
+                {
+                    res.send(result.recordset[0]);
+                }
+                else
+                {
+                    res.status(400).send("Please first check your mailbox to activate the account.");
+                }
+            }
             else
                 res.status(400).send('The password is not correct or the account is not exist.');
-        } catch (err) {
+        }
+        catch (err)
+        {
             console.log('Error occurred in signin');
             console.dir(err);
             res.status(500).send(err);
