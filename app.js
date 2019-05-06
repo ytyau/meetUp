@@ -17,6 +17,8 @@ var CONFIG = require('./config.json');
 const sql = require('mssql')
 
 const uuidv1 = require('uuid/v1');
+
+var nodemailer = require('nodemailer');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -58,14 +60,18 @@ app.post('/SignUp', async function (req, res) {
             }
             else
             {
+                var memberId = uuidv1();
                 var shasum = crypto.createHash('sha1');
                 shasum.update(pwd);
                 var hashedPwd = shasum.digest('hex');
-                var query = "INSERT INTO Member (Username, Password, IsStudent, Gender, DOB, Email) VALUES ('" + username + "', '" + hashedPwd + "', " + isStudent + ", '" + gender + "', '" + dob + "', '" + email + "');";
+                var query = "INSERT INTO Member (MemberID, Username, Password, IsStudent, Gender, DOB, Email) VALUES ('" + memberId + "', '" + username + "', '" + hashedPwd + "', " + isStudent + ", '" + gender + "', '" + dob + "', '" + email + "');";
                 // console.log(query);
                 var result = await sql.query(query);
                 if (result.rowsAffected > 0)
+                {
                     res.send('Success');
+                    SendVerificationMail(email, memberId);
+                }
                 else
                 {
                     console.dir(result);
@@ -82,6 +88,37 @@ app.post('/SignUp', async function (req, res) {
     }
 });
 /********** SignUp End **********/
+
+/********** Send Mail Statt **********/
+function SendVerificationMail(toMail, memberId)
+{
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: CONFIG.fromGmail,
+            pass: CONFIG.gmailPwd
+        }
+    });
+
+    var htmlContent = '<!DOCTYPE html><html><body style="font-family: arial, sans-serif;"><h2>Welcome to MeetUp!</h2><p>Please click <a href="{{link}}" target="_blank">here</a> to verify your acccount.</p><p>MeetUp Team</p><p>7 May, 2019</p></body></html>';
+    htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/emailVeri?token=" + memberId);
+
+    var mailOptions = {
+        from: "MeetUp Team<" + CONFIG.fromGmail + ">",
+        to: toMail,
+        subject: 'Verify Your MeetUp Accont',
+        html: htmlContent
+    };
+      
+    transporter.sendMail(mailOptions, function(error, info)
+    {
+        if (error)
+        {
+            console.log(error);
+        }
+    });
+}
+/********** Send Mail End **********/
 
 /********** SignIn End **********/
 app.post('/SignIn', async function (req, res) {
