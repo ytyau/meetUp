@@ -133,7 +133,7 @@ app.post('/SignIn', async function (req, res) {
             shasum.update(pwd);
             var hashedPwd = shasum.digest('hex');
 
-            var query = "Select MemberID, Username, Password, Gender, DOB, AccCreatedAt, Email, IsVerified from Member where Email = '" + email + "' And Password = '" + hashedPwd + "'";
+            var query = "Select MemberID, Username, Gender, DOB, AccCreatedAt, Email, IsVerified from Member where Email = '" + email + "' And Password = '" + hashedPwd + "'";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
