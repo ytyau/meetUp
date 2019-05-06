@@ -19,6 +19,8 @@ const sql = require('mssql')
 const uuidv1 = require('uuid/v1');
 
 var nodemailer = require('nodemailer');
+
+var request = require('request');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -222,17 +224,8 @@ app.post('/CreateEvent', async function (req, res) {
             // console.dir(result);
             if (result.rowsAffected > 0)
             {
-                query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
-                result = await sql.query(query);
-                if (result.rowsAffected > 0)
-                {
-                    res.send("Success");
-                }
-                else
-                {
-                    // console.log(query);
-                    res.status(500).send('Error occurred in join event');
-                }
+                // Join event here
+                res.redirect('/JoinEvent?memberId=' + memberId + "&eventId=" + eventId + "&availableTime=" + availableTime);
             }
             else
             {
@@ -372,11 +365,11 @@ app.get('/SearchEvent', async function (req, res)
 /********** Search Event End **********/
 
 /********** Join Event Start **********/
-app.post('/JoinEvent', async function (req, res)
+app.get('/JoinEvent', async function (req, res)
 {
-    var memberId = req.body['memberId'];
-    var eventId = req.body['eventId'];
-    var availableTime = req.body['availableTime'];
+    var memberId = req.query.memberId;
+    var eventId = req.query.eventId;
+    var availableTime = req.query.availableTime;
     
     if (!memberId || !eventId || !availableTime)
     {
@@ -525,6 +518,32 @@ app.get('/GetDiscussion', async function (req, res)
     }
 });
 /********** Get Discussion End **********/
+
+/********** Get Notification Start **********/
+app.get('/GetNotification', async function (req, res)
+{
+    var memberId = req.query.memberId;
+    
+    if (!memberId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select * From Notification Where MemberID = '" + memberId + "'");
+            res.send(result.recordset);
+        }
+        catch (err)
+        {
+            console.log('Error occurred in GetNotification');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Get Notification End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
