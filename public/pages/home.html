@@ -1,0 +1,32 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <ul class="nav justify-content-end mb-3">
+            <li class="nav-item">
+                <a class="nav-link disabled">{{role}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/about">About</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn"><span ng-click="logout()">Logout</span></a>
+            </li>
+        </ul>
+        <h1 class="text-center mb-4">MeetUp</h1>
+        <section id="newGroup" class="border-top">
+            <p class="text-center pt-3">Cannot find group for you? Create one!</p>
+            <a class="btn btn-dark btn-block" ng-click="submitForm('tutor')" href="#/createGroup">Create a new
+                group</a>
+        </section>
+
+    </div>
+</body>
+
+</html>

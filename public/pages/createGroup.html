@@ -1,0 +1,218 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <ul class="nav justify-content-end mb-3">
+            <li class="nav-item">
+                <a class="nav-link disabled">{{role}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/about">About</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn"><span ng-click="logout()">Logout</span></a>
+            </li>
+        </ul>
+        <h1 class="text-center mb-4">Create Group</h1>
+        <div class="card">
+            <div class="card-header">Group information</div>
+            <div class="card-body">
+                <form id="createGroupForm" name="createGroupForm" novalidate>
+                    <div class="form-group row">
+                        <label for="title" class="col-sm-2 col-form-label">Group Name</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="title" class="form-control" placeholder="Enter group title"
+                                id="title" ng-model="userInput.title"
+                                ng-class="{ 'is-invalid' : createGroupForm.title.$invalid && createGroupForm.title.$touched }"
+                                required>
+                            <span class="invalid-feedback"
+                                ng-show="createGroupForm.title.$invalid && createGroupForm.title.$touched"
+                                class="help-block">
+                                Please enter this field</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="location" class="col-sm-2 col-form-label">Location</label>
+                        <div class="col-sm-10">
+                            <select name="location" class="form-control" id="location" ng-model="userInput.location"
+                                ng-class="{ 'is-invalid' : createGroupForm.location.$invalid && createGroupForm.location.$touched }"
+                                required>
+                                <option value="{{district}}" ng-repeat="district in districtList">{{district}}
+                                </option>
+                            </select>
+                            <span class="invalid-feedback"
+                                ng-show="createGroupForm.location.$invalid && createGroupForm.location.$touched"
+                                class="help-block">
+                                Please enter this field</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="category" class="col-sm-2 col-form-label">Category</label>
+                        <div class="col-sm-10">
+                            <select name="category" class="form-control" id="category" ng-model="categorySelected"
+                                ng-change="changeList()"
+                                ng-class="{ 'is-invalid' : createGroupForm.category.$invalid && createGroupForm.category.$touched }"
+                                required>
+                                <option value="{{category}}" ng-repeat="category in categoryList">{{category}}
+                                </option>
+                            </select>
+                            <span class="invalid-feedback"
+                                ng-show="createGroupForm.category.$invalid && createGroupForm.category.$touched"
+                                class="help-block">
+                                Please enter this field</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="course" class="col-sm-2 col-form-label">Course</label>
+                        <div class="col-sm-10">
+                            <select name="course" class="form-control" id="course" ng-if="displayCourseList.length!=0"
+                                ng-model="userInput.courseObj" ng-change="changeLevelList()"
+                                ng-class="{ 'is-invalid' : createGroupForm.course.$invalid && createGroupForm.course.$touched }"
+                                required>
+                                <option value="{{course}}" ng-repeat="course in displayCourseList">{{course.name}}
+                                </option>
+                            </select>
+                            <input ng-if="displayCourseList.length==0 && categorySelected != 'Others'"
+                                class="form-control" type="text" placeholder="No related courses available now"
+                                readonly>
+                            <input name="course2" id="course2"
+                                ng-if="displayCourseList.length==0 && categorySelected == 'Others'" class="form-control"
+                                type="text" ng-model="userInput.customCourse"
+                                ng-class="{ 'is-invalid' : userInput.customCourse.length==0 && createGroupForm.course2.$touched }"
+                                placeholder="Input your course here">
+                            <span class="invalid-feedback"
+                                ng-show="(createGroupForm.course.$invalid && createGroupForm.course.$touched) || (userInput.customCourse.length==0 && createGroupForm.course2.$touched)"
+                                class="help-block">
+                                Please enter this field</span>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="level" class="col-sm-2 col-form-label">Level</label>
+                        <div class="col-sm-10">
+                            <select name="level" class="form-control" id="level" ng-if="displayLevelList.length!=0"
+                                ng-model="userInput.level"
+                                ng-class="{ 'is-invalid' : createGroupForm.level.$invalid && createGroupForm.level.$touched }"
+                                required>
+                                <option value="{{level}}" ng-repeat="level in displayLevelList">{{level}}</option>
+                            </select>
+                            <input ng-if="displayLevelList.length==0" class="form-control" type="text"
+                                placeholder="Choose a course first" readonly>
+                            <span class="invalid-feedback"
+                                ng-show="createGroupForm.level.$invalid && createGroupForm.level.$touched"
+                                class="help-block">
+                                Please enter this field</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header">Availability</div>
+            <div class="card-body">
+                <p>Please state your best availability for each weekday. Leave it blank if you are not available the
+                    whole day.</p>
+                <form id="createGroupForm2" name="createGroupForm2" novalidate>
+                    <div class="form-group row">
+                        <label for="availabilityMon" class="col-sm-2 col-form-label">Monday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilityMon" id="availabilityMon" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                                <p class="invalid-feedback" ng-show="createGroupForm2.availabilityMon.$touched"
+                                    class="help-block">Ending
+                                    time should be later than starting time</p>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="availabilityTue" class="col-sm-2 col-form-label">Tuesday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilityTue" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="availabilityWed" class="col-sm-2 col-form-label">Wednesday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilityWed" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="availabilityThurs" class="col-sm-2 col-form-label">Thursday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilityThurs" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="availabilityFri" class="col-sm-2 col-form-label">Friday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilityFri" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="availabilitySat" class="col-sm-2 col-form-label">Saturday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilitySat" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="availabilitySun" class="col-sm-2 col-form-label">Sunday</label>
+                        <div class="col-sm-10">
+                            <div id="datetimepickerDate" class="input-group timerange">
+                                <input name="availabilitySun" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
+                                <span class="input-group-text" style="">
+                                    <i aria-hidden="true" class="fa fa-calendar"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="mt-3 mb-3">
+            <button class="btn btn-dark btn-block" ng-click="submitForm()" type="button" style="color: white"
+                ng-disabled="createGroupForm.$invalid && !haveAvailability">Submit</button></div>
+    </div>
+</body>
+
+</html>
