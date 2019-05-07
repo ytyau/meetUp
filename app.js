@@ -19,6 +19,10 @@ const sql = require('mssql')
 const uuidv1 = require('uuid/v1');
 
 var nodemailer = require('nodemailer');
+
+var dateFormat = require('dateformat');
+
+var fs = require('fs');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -70,7 +74,7 @@ app.post('/SignUp', async function (req, res) {
                 if (result.rowsAffected > 0)
                 {
                     res.send('Success');
-                    SendVerificationMail(email, memberId);
+                    SendVerificationMail(email, memberId, username);
                 }
                 else
                 {
@@ -89,36 +93,63 @@ app.post('/SignUp', async function (req, res) {
 });
 /********** SignUp End **********/
 
-/********** Send Mail Statt **********/
-function SendVerificationMail(toMail, memberId)
+/********** Send Mail Start **********/
+function SendVerificationMail(toMail, memberId, username)
 {
-    var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: CONFIG.fromGmail,
-            pass: CONFIG.gmailPwd
-        }
-    });
-
-    var htmlContent = '<!DOCTYPE html><html><body style="font-family: arial, sans-serif;"><h2>Welcome to MeetUp!</h2><p>Please click <a href="{{link}}" target="_blank">here</a> to verify your acccount.</p><p>MeetUp Team</p><p>7 May, 2019</p></body></html>';
-    htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/emailVeri?token=" + memberId);
-
-    var mailOptions = {
-        from: "MeetUp Team<" + CONFIG.fromGmail + ">",
-        to: toMail,
-        subject: 'Verify Your MeetUp Accont',
-        html: htmlContent
-    };
-      
-    transporter.sendMail(mailOptions, function(error, info)
-    {
-        if (error)
+    var expireyTime = new Date();
+    expireyTime.setDate(expireyTime.getDate() + 1); // Expired 1 day after
+    fs.readFile('mailTemplate/MailVerification.html', 'utf8', function(err, htmlContent) {
+        if (err)
         {
-            console.log(error);
+            console.dir(err);
+        }
+        else
+        {
+            htmlContent = htmlContent.replace("{{Username}}", username);
+            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/MailVerification?token=" + memberId);
+            htmlContent = htmlContent.replace("{{ExpiryDatetime}}", dateFormat(expireyTime, "dd/mm/yyyy h:MMtt"));
+            htmlContent = htmlContent.replace("{{CurrentDate}}", dateFormat("dd mmm, yyyy"));
+            SendMail(toMail, 'Verify Your MeetUp Accont', htmlContent);
         }
     });
 }
 /********** Send Mail End **********/
+
+/********** Mail Verification Start **********/
+app.get('/MailVerification', async function (req, res)
+{
+    var token = req.query.token;
+    
+    if (!token)
+    {
+        // Fail case
+        res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to 404 page
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Update Member Set IsVerified = 1 Where MemberID = '" + token + "'");
+            if (result.rowsAffected > 0)
+            {
+                // Success case
+                res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to success page
+            }
+            else
+            {
+                // Fail case
+                res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to fail page
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in MailVerification');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Mail Verification End **********/
 
 /********** SignIn End **********/
 app.post('/SignIn', async function (req, res) {
@@ -133,7 +164,7 @@ app.post('/SignIn', async function (req, res) {
             shasum.update(pwd);
             var hashedPwd = shasum.digest('hex');
 
-            var query = "Select MemberID, Username, Password, Gender, DOB, AccCreatedAt, Email, IsVerified from Member where Email = '" + email + "' And Password = '" + hashedPwd + "'";
+            var query = "Select MemberID, Username, Gender, DOB, AccCreatedAt, Email, IsVerified from Member where Email = '" + email + "' And Password = '" + hashedPwd + "'";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
@@ -189,17 +220,8 @@ app.post('/CreateEvent', async function (req, res) {
             // console.dir(result);
             if (result.rowsAffected > 0)
             {
-                query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
-                result = await sql.query(query);
-                if (result.rowsAffected > 0)
-                {
-                    res.send("Success");
-                }
-                else
-                {
-                    // console.log(query);
-                    res.status(500).send('Error occurred in join event');
-                }
+                // Join event here
+                res.redirect('/JoinEvent?memberId=' + memberId + "&eventId=" + eventId + "&availableTime=" + availableTime);
             }
             else
             {
@@ -339,11 +361,12 @@ app.get('/SearchEvent', async function (req, res)
 /********** Search Event End **********/
 
 /********** Join Event Start **********/
-app.post('/JoinEvent', async function (req, res)
+app.get('/JoinEvent', async function (req, res)
 {
-    var memberId = req.body['memberId'];
-    var eventId = req.body['eventId'];
-    var availableTime = req.body['availableTime'];
+    var memberId = req.query.memberId;
+    var eventId = req.query.eventId;
+    var availableTime = req.query.availableTime;
+    var isToSendNoti = req.query.isToSendNoti;
     
     if (!memberId || !eventId || !availableTime)
     {
@@ -367,6 +390,10 @@ app.post('/JoinEvent', async function (req, res)
                         if (result.rowsAffected > 0)
                         {
                             res.send("Success");
+                            if (isToSendNoti)
+                            {
+                                SendJoinEventNoti(memberId, eventId);
+                            }
                         }
                         else
                         {
@@ -396,6 +423,68 @@ app.post('/JoinEvent', async function (req, res)
         }
     }
 });
+
+async function SendJoinEventNoti(memberId, eventId)
+{
+    try
+    {
+        var lackParti = -99;
+        var title = "";
+        var message = "";
+        var result = await sql.query("Select Username From Member Where MemberID = '" + memberId + "'");
+        if (result.recordset.length > 0)
+        {
+            title = result.recordset[0].Username + " has joined the group ";
+        }
+        result = await sql.query("Select Title, MinParticipant, CurrentMemberCnt From Event Where EventID = '" + eventId + "'");
+        if (result.recordset.length > 0)
+        {
+            title += '"' + result.recordset[0].Title + '"! ';
+            lackParti = result.recordset[0].MinParticipant - result.recordset[0].CurrentMemberCnt;
+            if (lackParti <= 0 && lackParti != -99)
+            {
+                message = "Enough people to start!";
+            }
+            else
+            {
+                message = lackParti + " more members to go!";
+            }
+        }
+        result = await sql.query("Select Username, Email, Event.Title, JoinEvent.MemberID From JoinEvent, Member, Event Where Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And JoinEvent.EventID = '" + eventId + "' And IsQuit = 0");
+        console.dir(result);
+        for (i = 0; i < result.recordset.length; i++)
+        {
+            SendNoti(result.recordset[i].MemberID, title, message);
+            if (lackParti == 0)
+            {
+                console.log('Start send enough member mail');
+                SendEnoughGroupMemberMail(result.recordset[i].Username, result.recordset[i].Title, result.recordset[i].Email);
+            }
+        }
+    }
+    catch (err)
+    {
+        console.dir(err);
+    }
+}
+
+async function SendEnoughGroupMemberMail(username, groupName, toMail)
+{
+    fs.readFile('mailTemplate/EnoughGroupMember.html', 'utf8', function(err, htmlContent) {
+        if (err)
+        {
+            console.dir(err);
+        }
+        else
+        {
+            htmlContent = htmlContent.replace("{{Username}}", username);
+            htmlContent = htmlContent.replace("{{GroupName}}", groupName);
+            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/"); // TODO: change to the event page
+            htmlContent = htmlContent.replace("{{CurrentDate}}", dateFormat("dd mmm, yyyy"));
+            SendMail(toMail, 'Verify Your MeetUp Accont', htmlContent);
+        }
+    });
+}
 /********** Join Event End **********/
 
 /********** Quit Event Stat **********/
@@ -492,6 +581,111 @@ app.get('/GetDiscussion', async function (req, res)
     }
 });
 /********** Get Discussion End **********/
+
+/********** Get Notification Start **********/
+app.get('/GetNotification', async function (req, res)
+{
+    var memberId = req.query.memberId;
+    
+    if (!memberId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Select * From Notification Where MemberID = '" + memberId + "'");
+            res.send(result.recordset);
+        }
+        catch (err)
+        {
+            console.log('Error occurred in GetNotification');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Get Notification End **********/
+
+/********** Read Notification Start **********/
+app.get('/ReadNotification', async function (req, res)
+{
+    var notificationId = req.query.notificationId;
+    
+    if (!notificationId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Update Notification Set isRead = 1 Where NotificationID = '" + notificationId + "'");
+            if (result.rowsAffected > 0)
+            {
+                res.send("Success");
+            }
+            else
+            {
+                res.status(400).send("notificationId not valid.");
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in ReadNotification');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Read Notification End **********/
+
+/********** Send Notification Stat **********/
+async function SendNoti(memberId, title, content)
+{
+    try
+    {
+        var result = await sql.query("INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')");
+        if (result.rowsAffected <= 0)
+        {
+            console.log("Inserted Notification but no rows affected");
+        }
+    }
+    catch (err)
+    {
+        console.dir(err);
+    }
+}
+/********** Send Notification End **********/
+
+/********** Send Mail Start **********/
+function SendMail(toMail, subject, content)
+{
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: CONFIG.fromGmail,
+            pass: CONFIG.gmailPwd
+        }
+    });
+
+    var mailOptions = {
+        from: "MeetUp Team<" + CONFIG.fromGmail + ">",
+        to: toMail,
+        subject: subject,
+        html: content
+    };
+      
+    transporter.sendMail(mailOptions, function(error, info)
+    {
+        if (error)
+        {
+            console.log(error);
+        }
+    });
+}
+/********** Send Mail End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
