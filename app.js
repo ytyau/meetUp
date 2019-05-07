@@ -21,6 +21,8 @@ const uuidv1 = require('uuid/v1');
 var nodemailer = require('nodemailer');
 
 var dateFormat = require('dateformat');
+
+var fs = require('fs');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -94,31 +96,20 @@ app.post('/SignUp', async function (req, res) {
 /********** Send Mail Start **********/
 function SendVerificationMail(toMail, memberId, username)
 {
-    var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: CONFIG.fromGmail,
-            pass: CONFIG.gmailPwd
-        }
-    });
-
     var expireyTime = new Date();
     expireyTime.setDate(expireyTime.getDate() + 1); // Expired 1 day after
-    var htmlContent = '<!DOCTYPE html><html><body style="font-family: arial, sans-serif;"><h2>Welcome to MeetUp!</h2><p>Hi ' + username + '. Please click <a href="{{link}}" target="_blank">here</a> to verify your account. This link will expire at ' + dateFormat(expireyTime, "dd/mm/yyyy h:MMtt") + '.</p><p>MeetUp Team</p><p>' + dateFormat("dd mmm, yyyy") + '</p></body></html>';
-    htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/MailVerification?token=" + memberId);
-
-    var mailOptions = {
-        from: "MeetUp Team<" + CONFIG.fromGmail + ">",
-        to: toMail,
-        subject: 'Verify Your MeetUp Accont',
-        html: htmlContent
-    };
-      
-    transporter.sendMail(mailOptions, function(error, info)
-    {
-        if (error)
+    fs.readFile('mailTemplate/MailVerification.html', 'utf8', function(err, htmlContent) {
+        if (err)
         {
-            console.log(error);
+            console.dir(err);
+        }
+        else
+        {
+            htmlContent = htmlContent.replace("{{Username}}", username);
+            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/MailVerification?token=" + memberId);
+            htmlContent = htmlContent.replace("{{ExpiryDatetime}}", dateFormat(expireyTime, "dd/mm/yyyy h:MMtt"));
+            htmlContent = htmlContent.replace("{{CurrentDate}}", dateFormat("dd mmm, yyyy"));
+            SendMail(toMail, 'Verify Your MeetUp Accont', htmlContent);
         }
     });
 }
@@ -132,7 +123,7 @@ app.get('/MailVerification', async function (req, res)
     if (!token)
     {
         // Fail case
-        res.status(200).sendFile(path.join(__dirname + '/public/index.html'));
+        res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to 404 page
     }
     else
     {
@@ -142,12 +133,12 @@ app.get('/MailVerification', async function (req, res)
             if (result.rowsAffected > 0)
             {
                 // Success case
-                res.status(200).sendFile(path.join(__dirname + '/public/index.html'));
+                res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to success page
             }
             else
             {
                 // Fail case
-                res.status(200).sendFile(path.join(__dirname + '/public/index.html'));
+                res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to fail page
             }
         }
         catch (err)
@@ -459,16 +450,38 @@ async function SendJoinEventNoti(memberId, eventId)
                 message = lackParti + " more members to go!";
             }
         }
-        result = await sql.query("Select MemberID From JoinEvent Where MemberID <> '" + memberId + "' And EventID = '" + eventId + "' And IsQuit = 0");
+        result = await sql.query("Select JoinEvent.MemberID From JoinEvent, Member Where Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And EventID = '" + eventId + "' And IsQuit = 0");
         for (i = 0; i < result.recordset.length; i++)
         {
             SendNoti(result.recordset[i].MemberID, title, message);
+            if (lackParti == 0)
+            {
+
+            }
         }
     }
     catch (err)
     {
         console.dir(log);
     }
+}
+
+async function SendEnoughGroupMemberMail(username, groupName, toMail)
+{
+    fs.readFile('mailTemplate/EnoughGroupMember.html', 'utf8', function(err, htmlContent) {
+        if (err)
+        {
+            console.dir(err);
+        }
+        else
+        {
+            htmlContent = htmlContent.replace("{{Username}}", username);
+            htmlContent = htmlContent.replace("{{GroupName}}", groupName);
+            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/"); // TODO: change to the event page
+            htmlContent = htmlContent.replace("{{CurrentDate}}", dateFormat("dd mmm, yyyy"));
+            SendMail(toMail, 'Verify Your MeetUp Accont', htmlContent);
+        }
+    });
 }
 /********** Join Event End **********/
 
@@ -610,6 +623,34 @@ async function SendNoti(memberId, title, content)
     }
 }
 /********** Send Notification End **********/
+
+/********** Send Mail Start **********/
+function SendMail(toMail, subject, content)
+{
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: CONFIG.fromGmail,
+            pass: CONFIG.gmailPwd
+        }
+    });
+
+    var mailOptions = {
+        from: "MeetUp Team<" + CONFIG.fromGmail + ">",
+        to: toMail,
+        subject: subject,
+        html: content
+    };
+      
+    transporter.sendMail(mailOptions, function(error, info)
+    {
+        if (error)
+        {
+            console.log(error);
+        }
+    });
+}
+/********** Send Mail End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
