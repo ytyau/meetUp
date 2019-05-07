@@ -608,6 +608,39 @@ app.get('/GetNotification', async function (req, res)
 });
 /********** Get Notification End **********/
 
+/********** Read Notification Start **********/
+app.get('/ReadNotification', async function (req, res)
+{
+    var notificationId = req.query.notificationId;
+    
+    if (!notificationId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var result = await sql.query("Update Notification Set isRead = 1 Where NotificationID = '" + notificationId + "'");
+            if (result.rowsAffected > 0)
+            {
+                res.send("Success");
+            }
+            else
+            {
+                res.status(400).send("notificationId not valid.");
+            }
+        }
+        catch (err)
+        {
+            console.log('Error occurred in ReadNotification');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Read Notification End **********/
+
 /********** Send Notification Stat **********/
 async function SendNoti(memberId, title, content)
 {
