@@ -450,19 +450,21 @@ async function SendJoinEventNoti(memberId, eventId)
                 message = lackParti + " more members to go!";
             }
         }
-        result = await sql.query("Select JoinEvent.MemberID From JoinEvent, Member Where Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And EventID = '" + eventId + "' And IsQuit = 0");
+        result = await sql.query("Select Username, Email, Event.Title, JoinEvent.MemberID From JoinEvent, Member, Event Where Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And JoinEvent.EventID = '" + eventId + "' And IsQuit = 0");
+        console.dir(result);
         for (i = 0; i < result.recordset.length; i++)
         {
             SendNoti(result.recordset[i].MemberID, title, message);
             if (lackParti == 0)
             {
-
+                console.log('Start send enough member mail');
+                SendEnoughGroupMemberMail(result.recordset[i].Username, result.recordset[i].Title, result.recordset[i].Email);
             }
         }
     }
     catch (err)
     {
-        console.dir(log);
+        console.dir(err);
     }
 }
 
