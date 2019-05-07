@@ -20,7 +20,7 @@ const uuidv1 = require('uuid/v1');
 
 var nodemailer = require('nodemailer');
 
-var request = require('request');
+var dateFormat = require('dateformat');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -72,7 +72,7 @@ app.post('/SignUp', async function (req, res) {
                 if (result.rowsAffected > 0)
                 {
                     res.send('Success');
-                    SendVerificationMail(email, memberId);
+                    SendVerificationMail(email, memberId, username);
                 }
                 else
                 {
@@ -91,8 +91,8 @@ app.post('/SignUp', async function (req, res) {
 });
 /********** SignUp End **********/
 
-/********** Send Mail Statt **********/
-function SendVerificationMail(toMail, memberId)
+/********** Send Mail Start **********/
+function SendVerificationMail(toMail, memberId, username)
 {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -102,8 +102,10 @@ function SendVerificationMail(toMail, memberId)
         }
     });
 
-    var htmlContent = '<!DOCTYPE html><html><body style="font-family: arial, sans-serif;"><h2>Welcome to MeetUp!</h2><p>Please click <a href="{{link}}" target="_blank">here</a> to verify your acccount.</p><p>MeetUp Team</p><p>7 May, 2019</p></body></html>';
-    htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/emailVeri?token=" + memberId);
+    var expireyTime = new Date();
+    expireyTime.setDate(expireyTime.getDate() + 1); // Expired 1 day after
+    var htmlContent = '<!DOCTYPE html><html><body style="font-family: arial, sans-serif;"><h2>Welcome to MeetUp!</h2><p>Hi ' + username + '. Please click <a href="{{link}}" target="_blank">here</a> to verify your account. This link will expire at ' + dateFormat(expireyTime, "dd/mm/yyyy h:MMtt") + '.</p><p>MeetUp Team</p><p>' + dateFormat("dd mmm, yyyy") + '</p></body></html>';
+    htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/MailVerification?token=" + memberId);
 
     var mailOptions = {
         from: "MeetUp Team<" + CONFIG.fromGmail + ">",
@@ -129,7 +131,8 @@ app.get('/MailVerification', async function (req, res)
     
     if (!token)
     {
-        res.status(400).send("Please specify all fields.");
+        // Fail case
+        res.status(200).sendFile(path.join(__dirname + '/public/index.html'));
     }
     else
     {
@@ -138,11 +141,13 @@ app.get('/MailVerification', async function (req, res)
             var result = await sql.query("Update Member Set IsVerified = 1 Where MemberID = '" + token + "'");
             if (result.rowsAffected > 0)
             {
-                res.send("Success");
+                // Success case
+                res.status(200).sendFile(path.join(__dirname + '/public/index.html'));
             }
             else
             {
-                res.status(400).send("This url is not valid.");
+                // Fail case
+                res.status(200).sendFile(path.join(__dirname + '/public/index.html'));
             }
         }
         catch (err)
@@ -370,6 +375,7 @@ app.get('/JoinEvent', async function (req, res)
     var memberId = req.query.memberId;
     var eventId = req.query.eventId;
     var availableTime = req.query.availableTime;
+    var isToSendNoti = req.query.isToSendNoti;
     
     if (!memberId || !eventId || !availableTime)
     {
@@ -393,6 +399,10 @@ app.get('/JoinEvent', async function (req, res)
                         if (result.rowsAffected > 0)
                         {
                             res.send("Success");
+                            if (isToSendNoti)
+                            {
+                                SendJoinEventNoti(memberId, eventId);
+                            }
                         }
                         else
                         {
@@ -422,6 +432,44 @@ app.get('/JoinEvent', async function (req, res)
         }
     }
 });
+
+async function SendJoinEventNoti(memberId, eventId)
+{
+    try
+    {
+        var lackParti = -99;
+        var title = "";
+        var message = "";
+        var result = await sql.query("Select Username From Member Where MemberID = '" + memberId + "'");
+        if (result.recordset.length > 0)
+        {
+            title = result.recordset[0].Username + " has joined the group ";
+        }
+        result = await sql.query("Select Title, MinParticipant, CurrentMemberCnt From Event Where EventID = '" + eventId + "'");
+        if (result.recordset.length > 0)
+        {
+            title += '"' + result.recordset[0].Title + '"! ';
+            lackParti = result.recordset[0].MinParticipant - result.recordset[0].CurrentMemberCnt;
+            if (lackParti <= 0 && lackParti != -99)
+            {
+                message = "Enough people to start!";
+            }
+            else
+            {
+                message = lackParti + " more members to go!";
+            }
+        }
+        result = await sql.query("Select MemberID From JoinEvent Where MemberID <> '" + memberId + "' And EventID = '" + eventId + "' And IsQuit = 0");
+        for (i = 0; i < result.recordset.length; i++)
+        {
+            SendNoti(result.recordset[i].MemberID, title, message);
+        }
+    }
+    catch (err)
+    {
+        console.dir(log);
+    }
+}
 /********** Join Event End **********/
 
 /********** Quit Event Stat **********/
@@ -544,6 +592,24 @@ app.get('/GetNotification', async function (req, res)
     }
 });
 /********** Get Notification End **********/
+
+/********** Send Notification Stat **********/
+async function SendNoti(memberId, title, content)
+{
+    try
+    {
+        var result = await sql.query("INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')");
+        if (result.rowsAffected <= 0)
+        {
+            console.log("Inserted Notification but no rows affected");
+        }
+    }
+    catch (err)
+    {
+        console.dir(err);
+    }
+}
+/********** Send Notification End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
