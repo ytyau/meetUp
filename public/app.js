@@ -4,6 +4,16 @@ app.config(function ($routeProvider) {
     $routeProvider
 
         .when('/', {
+            templateUrl: 'pages/home.html',
+            controller: 'HomeController'
+        })
+
+        .when('/home', {
+            templateUrl: 'pages/home.html',
+            controller: 'HomeController'
+        })
+
+        .when('/login', {
             templateUrl: 'pages/login.html',
             controller: 'LoginController'
         })
@@ -13,44 +23,9 @@ app.config(function ($routeProvider) {
             controller: 'SignUpController'
         })
 
-        .when('/admin', {
-            templateUrl: 'pages/admin.html',
-            controller: 'AdminController'
-        })
-
-        .when('/admin-event', {
-            templateUrl: 'pages/admin-event.html',
-            controller: 'AdminEventController'
-        })
-
-        .when('/admin-account', {
-            templateUrl: 'pages/admin-account.html',
-            controller: 'AdminAccountController'
-        })
-
-        .when('/user', {
-            templateUrl: 'pages/user.html',
-            controller: 'UserController'
-        })
-
-        .when('/user-event', {
-            templateUrl: 'pages/user-event.html',
-            controller: 'UserEventController'
-        })
-
-        .when('/user-fav-event', {
-            templateUrl: 'pages/user-fav-event.html',
-            controller: 'UserFavEventController'
-        })
-
-        .when('/event', {
-            templateUrl: 'pages/event.html',
-            controller: 'EventController'
-        })
-
-        .when('/about', {
-            templateUrl: 'pages/about.html',
-            controller: 'AboutController'
+        .when('/createGroup', {
+            templateUrl: 'pages/createGroup.html',
+            controller: 'CreateGroupController'
         })
 
         .otherwise({

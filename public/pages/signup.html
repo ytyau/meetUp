@@ -5,19 +5,26 @@
 
 <body>
     <div class="container-fluid">
-        <ul class="nav justify-content-end  mb-3">
+        <ul class="nav justify-content-end mb-3">
             <li class="nav-item">
                 <a class="nav-link disabled">{{role}}</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#/">Home</a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="#/about">About</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/login">Login</a>
+            </li>
         </ul>
-        <h1 class="text-center mb-3">Sign Up</h1>
+        <h1 class="text-center mb-4">Sign Up</h1>
         <form id="signUpForm" class="mt-3">
+            <div class="form-group row">
+                <label for="email" class="col-sm-2 col-form-label">Email</label>
+                <div class="col-sm-10">
+                    <input type="text" name="email" class="form-control" placeholder="Enter email" id="email"
+                        ng-model="userInfo.email">
+                </div>
+            </div>
             <div class="form-group row">
                 <label for="username" class="col-sm-2 col-form-label">Username</label>
                 <div class="col-sm-10">
@@ -53,10 +60,12 @@
                     <input type="date" name="DOB" class="form-control" id="DOB" ng-model="userInfo.dob">
                 </div>
             </div>
-            <button class="btn btn-dark btn-block" ng-click="submitForm('student')" style="color: white">Sign up as
-                student</button>
-            <button class="btn btn-outline-dark btn-block" ng-click="submitForm('tutor')">Sign up as tutor</button>
         </form>
+        <button class="btn btn-dark btn-block" type="button" ng-click="submitForm('student')" style="color: white">Sign
+            up as
+            student</button>
+        <button class="btn btn-outline-dark btn-block" type="button" ng-click="submitForm('tutor')">Sign up as
+            tutor</button>
     </div>
 </body>
 

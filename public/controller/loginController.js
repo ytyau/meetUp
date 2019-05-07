@@ -1,31 +1,24 @@
-app.controller('LoginController', function ($scope, $location, $cookieStore, $cookies) {
+app.controller('LoginController', function ($scope, $location, $cookies) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
     const cookies_memberInfo = "username";
     const cookies_memberId = "memberId";
+
     /*********** Check if Logged in Start ***********/
-
-
     if ($cookies.get(cookies_memberInfo)) {
-        if ($cookies.get(cookies_memberInfo)) {
-            //$location.path("admin");
-            console.log("Signed In")
-            //$scope.$apply();
-        } else {
-            //$location.path("user");
-        }
+        $location.path("/");
     }
     /*********** Check if Logged in End ***********/
 
-
     $scope.loginForm = document.getElementById("loginForm");
-    $scope.username;
+    $scope.email;
     $scope.pwd;
-    $scope.loginForm.onsubmit = function (role) {
+
+    $scope.loginForm.onsubmit = function () {
         //console.log("form submitted", $scope.loginForm.acc.value, $scope.loginForm.pwd.value);
 
-        if ($scope.username && $scope.pwd) {
+        if ($scope.email && $scope.pwd) {
             var dest = baseUrl + '/SignIn';
             $.ajax(dest, {
                 type: "POST",
@@ -42,8 +35,9 @@ app.controller('LoginController', function ($scope, $location, $cookieStore, $co
                         $cookies.put(cookies_memberInfo, JSON.stringify(response), {
                             'expires': expiryDate
                         });
-                        //$location.path("user");
-                        //$scope.$apply();
+                        $scope.$apply(function () {
+                            $location.path("/home");
+                        });
                     },
                     202: function (response) {
                         alert(response);
@@ -55,7 +49,7 @@ app.controller('LoginController', function ($scope, $location, $cookieStore, $co
             });
             return false;
         } else {
-            window.alert("Please enter all fields!");
+            window.alert("Please enter all fields");
         }
     }
 });
