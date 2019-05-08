@@ -1,0 +1,50 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <ul class="nav justify-content-end mb-3">
+            <li class="nav-item">
+                <a class="nav-link" href="#/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/user">{{role}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/noti">Notificaton <span ng-if="newNotification.length>0"
+                        class="badge badge-pill badge-danger"> {{newNotification.length}}</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="btn"><span ng-click="logout()">Logout</span></a>
+            </li>
+        </ul>
+        <h1 class="text-center mb-4">My Notifications</h1>
+        <div ng-if="allNotification">
+            <div class="card mb-4" ng-repeat="noti in allNotification">
+                <div class="card-header">{{noti.NotiTitle}}</div>
+                <div class="card-body">
+                    <p>{{noti.NotiContent}}</p>
+                    <div ng-if="noti.CourseRecommendation" ng-repeat="recommendation in noti.CourseRecommendation">
+                        Would you like to switch from <a href=""
+                            ng-click="viewEvent(recommendation.OldEventID)">{{recommendation.OldEventTitle}}</a>
+                        to <a href="" ng-click="viewEvent(recommendation.EventID)">{{recommendation.EventTitle}}</a>?
+                        They need {{recommendation.LackMember}} people now!
+                        <button type="button" class="mt-4 mb-4 btn btn-outline-dark btn-block"
+                            ng-click="viewEvent(recommendation.EventID,recommendation.OldEventID)">Quit the old one and
+                            join the new one</button>
+                    </div>
+
+                </div>
+                <div class="card-footer text-muted">
+                    {{noti.NotiCreatedAt| date: "dd/MM/yyyy HH:mm"}}
+                    <button ng-if="!noti.IsRead" type="button" class="btn btn-dark float-right"
+                        ng-click="markAsRead(noti.NotificationID)">Mark as read</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
