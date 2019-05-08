@@ -48,22 +48,15 @@ app.post('/SignUp', async function (req, res) {
     var dob = req.body['dob']
     var email = req.body['email']
 
-    if (!username || !pwd || !isStudent || !gender || !dob || !email)
-    {
+    if (!username || !pwd || !isStudent || !gender || !dob || !email) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Select MemberID from Member where Email = '" + email + "'");
             // console.dir(result);
-            if (result.recordset.length > 0)
-            {
+            if (result.recordset.length > 0) {
                 res.status(400).send('This email has been registered. Please use another email.');
-            }
-            else
-            {
+            } else {
                 var memberId = uuidv1();
                 var shasum = crypto.createHash('sha1');
                 shasum.update(pwd);
@@ -71,20 +64,15 @@ app.post('/SignUp', async function (req, res) {
                 var query = "INSERT INTO Member (MemberID, Username, Password, IsStudent, Gender, DOB, Email) VALUES ('" + memberId + "', '" + username + "', '" + hashedPwd + "', " + isStudent + ", '" + gender + "', '" + dob + "', '" + email + "');";
                 // console.log(query);
                 var result = await sql.query(query);
-                if (result.rowsAffected > 0)
-                {
+                if (result.rowsAffected > 0) {
                     res.send('Success');
                     SendVerificationMail(email, memberId, username);
-                }
-                else
-                {
+                } else {
                     console.dir(result);
                     res.status(500).send('Unknown error occurred.');
                 }
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in registration');
             console.dir(err);
             res.status(500).send(err);
@@ -94,17 +82,13 @@ app.post('/SignUp', async function (req, res) {
 /********** SignUp End **********/
 
 /********** Send Mail Start **********/
-function SendVerificationMail(toMail, memberId, username)
-{
+function SendVerificationMail(toMail, memberId, username) {
     var expireyTime = new Date();
     expireyTime.setDate(expireyTime.getDate() + 1); // Expired 1 day after
-    fs.readFile('mailTemplate/MailVerification.html', 'utf8', function(err, htmlContent) {
-        if (err)
-        {
+    fs.readFile('mailTemplate/MailVerification.html', 'utf8', function (err, htmlContent) {
+        if (err) {
             console.dir(err);
-        }
-        else
-        {
+        } else {
             htmlContent = htmlContent.replace("{{Username}}", username);
             htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/MailVerification?token=" + memberId);
             htmlContent = htmlContent.replace("{{ExpiryDatetime}}", dateFormat(expireyTime, "dd/mm/yyyy h:MMtt"));
@@ -116,33 +100,23 @@ function SendVerificationMail(toMail, memberId, username)
 /********** Send Mail End **********/
 
 /********** Mail Verification Start **********/
-app.get('/MailVerification', async function (req, res)
-{
+app.get('/MailVerification', async function (req, res) {
     var token = req.query.token;
-    
-    if (!token)
-    {
+
+    if (!token) {
         // Fail case
         res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to 404 page
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Update Member Set IsVerified = 1 Where MemberID = '" + token + "'");
-            if (result.rowsAffected > 0)
-            {
+            if (result.rowsAffected > 0) {
                 // Success case
                 res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to success page
-            }
-            else
-            {
+            } else {
                 // Fail case
                 res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to fail page
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in MailVerification');
             console.dir(err);
             res.status(500).send(err);
@@ -168,22 +142,15 @@ app.post('/SignIn', async function (req, res) {
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
-            if (result.recordset.length > 0)
-            {
-                if (result.recordset[0].IsVerified)
-                {
+            if (result.recordset.length > 0) {
+                if (result.recordset[0].IsVerified) {
                     res.send(result.recordset[0]);
-                }
-                else
-                {
+                } else {
                     res.status(400).send("Please first check your mailbox to activate the account.");
                 }
-            }
-            else
+            } else
                 res.status(400).send('The password is not correct or the account is not exist.');
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in signin');
             console.dir(err);
             res.status(500).send(err);
@@ -206,33 +173,25 @@ app.post('/CreateEvent', async function (req, res) {
     var title = req.body['title'];
     var content = req.body['content'];
 
-    if (!memberId || !availableTime ||!duration || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || !content)
-    {
-		res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    if (!memberId || !availableTime || !duration || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || !content) {
+        console.dir(req);
+        res.status(400).send("Please specify all fields.");
+    } else {
+        try {
             var eventId = uuidv1();
             var query = "INSERT INTO meetUpDB.dbo.Event (EventID, AvailableTime, Duration, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + availableTime + "', '" + duration + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
-            if (result.rowsAffected > 0)
-            {
+            if (result.rowsAffected > 0) {
                 // Join event here
                 res.redirect('/JoinEvent?memberId=' + memberId + "&eventId=" + eventId + "&availableTime=" + availableTime);
-            }
-            else
-            {
+            } else {
                 console.log('Error occurred in create event')
                 console.log(query);
                 res.status(500).send('Server error.');
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in create event');
             console.dir(err);
             res.status(500).send(err);
@@ -242,33 +201,26 @@ app.post('/CreateEvent', async function (req, res) {
 /********** Create Event End **********/
 
 /********** Get Event Start **********/
-app.get('/GetEvent', async function (req, res)
-{
+app.get('/GetEvent', async function (req, res) {
     var top = req.query.top;
     var offset = req.query.offset;
     var isGetAll = req.query.isGetAll;
     var memberId = req.query.memberId;
     var eventId = req.query.eventId;
-    
-    if (!top || !offset)
-    {
+
+    if (!top || !offset) {
         res.status(400).send("Please specify top and offset");
     }
 
-    if (!isGetAll && !memberId && !eventId)
-    {
+    if (!isGetAll && !memberId && !eventId) {
         res.status(400).send("Please specify one of these fields: isGetAll, memberId, eventId");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var selectItem = "";
             var fromTable = "";
             var condition = "";
             var orderBy = "";
-            if (isGetAll)
-            {
+            if (isGetAll) {
                 selectItem = "*";
                 fromTable = "Event";
                 condition = "IsClosed = 0";
@@ -280,12 +232,10 @@ app.get('/GetEvent', async function (req, res)
                 fromTable = "Event, JoinEvent";
                 condition = "MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0";
                 orderBy = " Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
-            }
-            else
-            {
+            } else {
                 selectItem = "*";
                 fromTable = "Event";
-                condition = "EventID = '" + eventId +  "'";
+                condition = "EventID = '" + eventId + "'";
             }
 
             /********** Query Total Number of Record ***********/
@@ -305,9 +255,7 @@ app.get('/GetEvent', async function (req, res)
             returnObj.totalRecords = totalRecords;
             returnObj.recordsets = result.recordsets;
             res.send(returnObj);
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in GetEvent');
             console.dir(err);
             res.status(500).send(err);
@@ -317,22 +265,17 @@ app.get('/GetEvent', async function (req, res)
 /********** Get Event End **********/
 
 /********** Search Event Start **********/
-app.get('/SearchEvent', async function (req, res)
-{
+app.get('/SearchEvent', async function (req, res) {
     var top = req.query.top;
     var offset = req.query.offset;
     var course = req.query.course;
     var level = req.query.level;
     var repeatBy = req.query.repeatBy;
-    
-    if (!course || !level || !repeatBy)
-    {
+
+    if (!course || !level || !repeatBy) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             /********** Query Total Number of Record ***********/
             var query = "Select count(*) as TotalRecords From Event Where Course = '" + course + "' And Level = '" + level + "' And RepeatBy = '" + repeatBy + "'";
             // console.log(query);
@@ -350,9 +293,7 @@ app.get('/SearchEvent', async function (req, res)
             returnObj.totalRecords = totalRecords;
             returnObj.recordsets = result.recordsets;
             res.send(returnObj);
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in SearchEvent');
             console.dir(err);
             res.status(500).send(err);
@@ -362,62 +303,42 @@ app.get('/SearchEvent', async function (req, res)
 /********** Search Event End **********/
 
 /********** Join Event Start **********/
-app.get('/JoinEvent', async function (req, res)
-{
+app.get('/JoinEvent', async function (req, res) {
     var memberId = req.query.memberId;
     var eventId = req.query.eventId;
     var availableTime = req.query.availableTime;
     var isToSendNoti = req.query.isToSendNoti;
-    
-    if (!memberId || !eventId || !availableTime)
-    {
+
+    if (!memberId || !eventId || !availableTime) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Select MaxParticipant, CurrentMemberCnt, IsClosed From Event Where EventID = '" + eventId + "'"); // Check: if (result.recordset.length > 0)
-            if (result.recordset.length > 0)
-            {
-                if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed)
-                {
+            if (result.recordset.length > 0) {
+                if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed) {
                     query = "Update Event Set AvailableTime = '" + availableTime + "' Where EventID = '" + eventId + "'";
                     result = await sql.query(query);
-                    if (result.rowsAffected > 0)
-                    {
-                        query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID, AvailableTime) VALUES ('" + eventId + "', '" + memberId  + "', '" + availableTime + "');";
+                    if (result.rowsAffected > 0) {
+                        query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID, AvailableTime) VALUES ('" + eventId + "', '" + memberId + "', '" + availableTime + "');";
                         result = await sql.query(query);
-                        if (result.rowsAffected > 0)
-                        {
+                        if (result.rowsAffected > 0) {
                             res.send("Success");
-                            if (isToSendNoti)
-                            {
+                            if (isToSendNoti) {
                                 SendJoinEventNoti(memberId, eventId);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             res.status(500).send("Fail to join event with eventId =" + eventId + ", memberId  = " + memberId);
                         }
+                    } else {
+                        res.status(500).send("Fail to update event AvailableTime with eventId =" + eventId + ", availableTime  = " + availableTime);
                     }
-                    else
-                    {
-                        res.status(500).send("Fail to update event AvailableTime with eventId =" + eventId + ", availableTime  = " + availableTime );
-                    }
-                }
-                else
-                {
+                } else {
                     res.status(400).send("Exceed max participants limit.");
                 }
-            }
-            else
-            {
+            } else {
                 res.status(400).send("Cannot find a event with ID = " + eventId);
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in JoinEvent');
             console.dir(err);
             res.status(500).send(err);
@@ -425,59 +346,44 @@ app.get('/JoinEvent', async function (req, res)
     }
 });
 
-async function SendJoinEventNoti(memberId, eventId)
-{
-    try
-    {
+async function SendJoinEventNoti(memberId, eventId) {
+    try {
         var lackParti = -99;
         var title = "";
         var message = "";
         var result = await sql.query("Select Username From Member Where MemberID = '" + memberId + "'");
-        if (result.recordset.length > 0)
-        {
+        if (result.recordset.length > 0) {
             title = result.recordset[0].Username + " has joined the group ";
         }
         result = await sql.query("Select Title, MinParticipant, CurrentMemberCnt From Event Where EventID = '" + eventId + "'");
-        if (result.recordset.length > 0)
-        {
+        if (result.recordset.length > 0) {
             title += '"' + result.recordset[0].Title + '"! ';
             lackParti = result.recordset[0].MinParticipant - result.recordset[0].CurrentMemberCnt;
-            if (lackParti <= 0 && lackParti != -99)
-            {
+            if (lackParti <= 0 && lackParti != -99) {
                 message = "Enough people to start!";
-            }
-            else
-            {
+            } else {
                 message = lackParti + " more members to go!";
             }
         }
         result = await sql.query("Select Username, Email, Event.Title, JoinEvent.MemberID From JoinEvent, Member, Event Where Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And JoinEvent.EventID = '" + eventId + "' And IsQuit = 0");
         console.dir(result);
-        for (i = 0; i < result.recordset.length; i++)
-        {
+        for (i = 0; i < result.recordset.length; i++) {
             SendNoti(result.recordset[i].MemberID, title, message);
-            if (lackParti == 0)
-            {
+            if (lackParti == 0) {
                 console.log('Start send enough member mail');
                 SendEnoughGroupMemberMail(result.recordset[i].Username, result.recordset[i].Title, result.recordset[i].Email);
             }
         }
-    }
-    catch (err)
-    {
+    } catch (err) {
         console.dir(err);
     }
 }
 
-async function SendEnoughGroupMemberMail(username, groupName, toMail)
-{
-    fs.readFile('mailTemplate/EnoughGroupMember.html', 'utf8', function(err, htmlContent) {
-        if (err)
-        {
+async function SendEnoughGroupMemberMail(username, groupName, toMail) {
+    fs.readFile('mailTemplate/EnoughGroupMember.html', 'utf8', function (err, htmlContent) {
+        if (err) {
             console.dir(err);
-        }
-        else
-        {
+        } else {
             htmlContent = htmlContent.replace("{{Username}}", username);
             htmlContent = htmlContent.replace("{{GroupName}}", groupName);
             htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/"); // TODO: change to the event page
@@ -489,37 +395,26 @@ async function SendEnoughGroupMemberMail(username, groupName, toMail)
 /********** Join Event End **********/
 
 /********** Quit Event Stat **********/
-app.post('/QuitEvent', async function (req, res)
-{
+app.post('/QuitEvent', async function (req, res) {
     var joinId = req.body['joinId'];
     var eventId = req.body['eventId'];
-    
-    if (!joinId || !eventId)
-    {
+
+    if (!joinId || !eventId) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Update JoinEvent Set IsQuit = 1 Where JoinID = '" + joinId + "'");
-            if (result.rowsAffected > 0)
-            {
+            if (result.rowsAffected > 0) {
                 // Update event availableTime
                 var query = "Select AvailableTime From JoinEvent Where EventID = '" + eventId + "' And IsQuit = 0";
                 result = await sql.query(query);
-                if (result.recordset.length > 1)
-                {
+                if (result.recordset.length > 1) {
                     res.send("Success");
                 }
-            }
-            else
-            {
+            } else {
                 res.status(400).send("Fail to quit group for joinId = " + joinId);
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in QuitEvent');
             console.dir(err);
             res.status(500).send(err);
@@ -529,33 +424,23 @@ app.post('/QuitEvent', async function (req, res)
 /********** Quit Event End **********/
 
 /********** Post Discussion Stat **********/
-app.post('/PostDiscussion', async function (req, res)
-{
+app.post('/PostDiscussion', async function (req, res) {
     var memberId = req.body['memberId'];
     var eventId = req.body['eventId'];
     var discussTitle = req.body['discussTitle'];
     var discussContent = req.body['discussContent'];
-    
-    if (!memberId || !eventId ||!discussTitle || !discussContent)
-    {
+
+    if (!memberId || !eventId || !discussTitle || !discussContent) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Insert Into Discussion (EventID, MemberID, DiscussTitle, DiscussContent) Values ('" + eventId + "', '" + memberId + "', '" + discussTitle + "', '" + discussContent + "')");
-            if (result.rowsAffected > 0)
-            {
+            if (result.rowsAffected > 0) {
                 res.send("Success");
-            }
-            else
-            {
+            } else {
                 res.status(400).send("Fail to post discussion for memberId = " + memberId + ", eventId = " + eventId + ", discussionTitle = " + discussTitle + ", discussionContent = " + discussContent);
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in PostDiscussion');
             console.dir(err);
             res.status(500).send(err);
@@ -565,23 +450,16 @@ app.post('/PostDiscussion', async function (req, res)
 /********** Post Discussion End **********/
 
 /********** Get Discussion Start **********/
-app.get('/GetDiscussion', async function (req, res)
-{
+app.get('/GetDiscussion', async function (req, res) {
     var eventId = req.query.eventId;
-    
-    if (!eventId)
-    {
+
+    if (!eventId) {
         res.status(400).send("Please specify eventId");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Select Username, DiscussTitle, DiscussContent, DiscussionCreatedAt From Discussion, Member Where EventID = '" + eventId + "' And Member.MemberID = Discussion.MemberID");
             res.send(result.recordset);
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in GetDiscussion');
             console.dir(err);
             res.status(500).send(err);
@@ -591,23 +469,16 @@ app.get('/GetDiscussion', async function (req, res)
 /********** Get Discussion End **********/
 
 /********** Get Notification Start **********/
-app.get('/GetNotification', async function (req, res)
-{
+app.get('/GetNotification', async function (req, res) {
     var memberId = req.query.memberId;
-    
-    if (!memberId)
-    {
+
+    if (!memberId) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Select * From Notification Where MemberID = '" + memberId + "'");
             res.send(result.recordset);
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in GetNotification');
             console.dir(err);
             res.status(500).send(err);
@@ -617,30 +488,20 @@ app.get('/GetNotification', async function (req, res)
 /********** Get Notification End **********/
 
 /********** Read Notification Start **********/
-app.get('/ReadNotification', async function (req, res)
-{
+app.get('/ReadNotification', async function (req, res) {
     var notificationId = req.query.notificationId;
-    
-    if (!notificationId)
-    {
+
+    if (!notificationId) {
         res.status(400).send("Please specify all fields.");
-    }
-    else
-    {
-        try
-        {
+    } else {
+        try {
             var result = await sql.query("Update Notification Set isRead = 1 Where NotificationID = '" + notificationId + "'");
-            if (result.rowsAffected > 0)
-            {
+            if (result.rowsAffected > 0) {
                 res.send("Success");
-            }
-            else
-            {
+            } else {
                 res.status(400).send("notificationId not valid.");
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             console.log('Error occurred in ReadNotification');
             console.dir(err);
             res.status(500).send(err);
@@ -650,26 +511,20 @@ app.get('/ReadNotification', async function (req, res)
 /********** Read Notification End **********/
 
 /********** Send Notification Stat **********/
-async function SendNoti(memberId, title, content)
-{
-    try
-    {
+async function SendNoti(memberId, title, content) {
+    try {
         var result = await sql.query("INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')");
-        if (result.rowsAffected <= 0)
-        {
+        if (result.rowsAffected <= 0) {
             console.log("Inserted Notification but no rows affected");
         }
-    }
-    catch (err)
-    {
+    } catch (err) {
         console.dir(err);
     }
 }
 /********** Send Notification End **********/
 
 /********** Send Mail Start **********/
-function SendMail(toMail, subject, content)
-{
+function SendMail(toMail, subject, content) {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -684,11 +539,9 @@ function SendMail(toMail, subject, content)
         subject: subject,
         html: content
     };
-      
-    transporter.sendMail(mailOptions, function(error, info)
-    {
-        if (error)
-        {
+
+    transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
             console.log(error);
         }
     });
@@ -696,38 +549,31 @@ function SendMail(toMail, subject, content)
 /********** Send Mail End **********/
 
 /********** Generate Recommendation Start **********/
-app.get('/GenerateRecommendation', async function (req, res)
-{
-    try
-        {
-            var result = await sql.query("Select Sth Here"); // Check: if (result.recordset.length > 0)
-            var result = await sql.query("INSERT INTO ..."); // Check: if (result.rowsAffected > 0)
-        }
-        catch (err)
-        {
-            console.log('Error occurred in API_NAME');
-            console.dir(err);
-            res.status(500).send(err);
-        }
+app.get('/GenerateRecommendation', async function (req, res) {
+    try {
+        var result = await sql.query("Select Sth Here"); // Check: if (result.recordset.length > 0)
+        var result = await sql.query("INSERT INTO ..."); // Check: if (result.rowsAffected > 0)
+    } catch (err) {
+        console.log('Error occurred in API_NAME');
+        console.dir(err);
+        res.status(500).send(err);
+    }
 });
 /********** Generate Recommendation End **********/
 
 /********** Utility Start **********/
-function GetMutualAvailableTimeSlot(availableTime1, availableTime2)
-{
+function GetMutualAvailableTimeSlot(availableTime1, availableTime2) {
     var mutualTime = {};
     availableTime1 = JSON.parse(availableTime1);
     availableTime2 = JSON.parse(availableTime2);
 
-    if (availableTime1.mon && availableTime2.mon)
-    {
+    if (availableTime1.mon && availableTime2.mon) {
 
     }
-    
+
 }
 
-function GetMutualAvaiableHourMinute(time1, time2)
-{
+function GetMutualAvaiableHourMinute(time1, time2) {
     var range1 = {};
     var range2 = {};
 
@@ -759,8 +605,7 @@ function GetMutualAvaiableHourMinute(time1, time2)
         }
     }
 
-    if (range1.from.hour > range2.from.hour)
-    {
+    if (range1.from.hour > range2.from.hour) {
         // swap two element
         var tmp = range1;
         range1 = range2;
