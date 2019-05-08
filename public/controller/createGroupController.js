@@ -1,5 +1,4 @@
 app.controller('CreateGroupController', function ($scope, $location, $cookieStore, $cookies, $filter, districtList, categoryList, langClassList, instrumentClassList, academicClassList) {
-
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
@@ -20,10 +19,13 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
     $scope.displayLevelList = [];
     $scope.districtList = districtList;
     $scope.categoryList = categoryList;
+    $scope.repeatPeriod = ["day", "week", "2 weeks", "month"]
     $scope.haveAvailability = false;
 
     $scope.userInput = {
-        repeatBy: "", //1 week, 2 week, 1 month
+        repeatBy: "",
+        durationHr: null, //TODO: validate duration
+        durationMin: null,
         location: "",
         minParticipant: "",
         maxParticipant: "",
@@ -35,13 +37,14 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         availability: {
             mon: "",
             tues: "",
-            "wed": "",
-            "thurs": "",
-            "fri": "",
-            "sat": "",
-            "sun": ""
+            wed: "",
+            thurs: "",
+            fri: "",
+            sat: "",
+            sun: ""
         }
     }
+
 
     $scope.error = {
         availabilityMon: false,
@@ -103,6 +106,274 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
             $cookies.remove(cookies_memberId);
         }
         $location.path("/login");
+    }
+
+    $scope.availabilityChange = function () {
+        //setTimeout(function () {
+        var availabilityForm = document.getElementById("createGroupForm2");
+        var matches;
+        if (availabilityForm.availabilityMon.value) {
+            //console.log(availabilityForm.availabilityMon.value);
+            matches = availabilityForm.availabilityMon.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilityMon.$invalid = true;
+                    $scope.error.availabilityMon = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilityMon.$invalid = false;
+                    $scope.error.availabilityMon = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        if (availabilityForm.availabilityTues.value) {
+            //console.log(availabilityForm.availabilityTue.value);
+            matches = availabilityForm.availabilityTues.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilityTues.$invalid = true;
+                    $scope.error.availabilityTues = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilityTues.$invalid = false;
+                    $scope.error.availabilityTues = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        if (availabilityForm.availabilityWed.value) {
+            //console.log(availabilityForm.availabilityWed.value);
+            matches = availabilityForm.availabilityWed.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilityWed.$invalid = true;
+                    $scope.error.availabilityWed = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilityWed.$invalid = false;
+                    $scope.error.availabilityWed = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        if (availabilityForm.availabilityThurs.value) {
+            //console.log(availabilityForm.availabilityThurs.value);
+            matches = availabilityForm.availabilityThurs.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilityThurs.$invalid = true;
+                    $scope.error.availabilityThurs = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilityThurs.$invalid = false;
+                    $scope.error.availabilityThurs = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        if (availabilityForm.availabilityFri.value) {
+            //console.log(availabilityForm.availabilityFri.value);
+            matches = availabilityForm.availabilityFri.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilityFri.$invalid = true;
+                    $scope.error.availabilityFri = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilityFri.$invalid = false;
+                    $scope.error.availabilityFri = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        if (availabilityForm.availabilitySat.value) {
+            //console.log(availabilityForm.availabilitySat.value);
+            matches = availabilityForm.availabilitySat.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilitySat.$invalid = true;
+                    $scope.error.availabilitySat = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilitySat.$invalid = false;
+                    $scope.error.availabilitySat = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        if (availabilityForm.availabilitySun.value) {
+            //console.log(availabilityForm.availabilitySun.value);
+            matches = availabilityForm.availabilitySun.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+            if (matches.length === 5) {
+                range = {
+                    from: {
+                        hour: matches[1],
+                        minute: matches[2]
+                    },
+                    to: {
+                        hour: matches[3],
+                        minute: matches[4]
+                    }
+                }
+                if (validateTimeRange(range)) {
+                    $scope.createGroupForm2.availabilitySun.$invalid = true;
+                    $scope.error.availabilitySun = true;
+                    //console.log("error");
+                } else {
+                    $scope.createGroupForm2.availabilitySun.$invalid = false;
+                    $scope.error.availabilitySun = false;
+                    //console.log("correct")
+                }
+            }
+        }
+
+        $scope.userInput.availability = {
+            mon: availabilityForm.availabilityMon && !$scope.error.availabilityMon ? availabilityForm.availabilityMon.value : null,
+            tues: availabilityForm.availabilityTues && !$scope.error.availabilityTues ? availabilityForm.availabilityTues.value : null,
+            wed: availabilityForm.availabilityWed && !$scope.error.availabilityWed ? availabilityForm.availabilityWed.value : null,
+            thurs: availabilityForm.availabilityThurs && !$scope.error.availabilityThurs ? availabilityForm.availabilityThurs.value : null,
+            fri: availabilityForm.availabilityFri && !$scope.error.availabilityFri ? availabilityForm.availabilityFri.value : null,
+            sat: availabilityForm.availabilitySat && !$scope.error.availabilitySat ? availabilityForm.availabilitySat.value : null,
+            sun: availabilityForm.availabilitySun && !$scope.error.availabilitySun ? availabilityForm.availabilitySun.value : null
+        }
+        var hasError = $scope.error.availabilityMon || $scope.error.availabilityTues || $scope.error.availabilityWed || $scope.error.availabilityThurs || $scope.error.availabilityFri || $scope.error.availabilitySat || $scope.error.availabilitySun;
+        console.dir($scope.error);
+        if (hasError) {
+            $scope.haveAvailability = false;
+        } else {
+            if ($scope.userInput.availability.mon || $scope.userInput.availability.tues || $scope.userInput.availability.wed || $scope.userInput.availability.thurs || $scope.userInput.availability.fri || $scope.userInput.availability.sat || $scope.userInput.availability.sun) {
+                $scope.haveAvailability = true;
+            } else {
+                $scope.haveAvailability = false;
+            }
+        }
+    }
+
+    function validateTimeRange(range) {
+        if (range.from.hour > range.to.hour) {
+            return true;
+        } else if (range.from.hour == range.to.hour) {
+            if (range.from.minute >= range.to.minute) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    var createGroupForm = document.getElementById("createGroupForm");
+    $scope.submitForm = function () {
+        if (!$scope.createGroupForm.$valid || !$scope.haveAvailability) {
+            //empty title
+            window.alert("have error")
+        } else {
+            var finalCourse;
+            if ($scope.userInput.courseObj) {
+                finalCourse = JSON.parse($scope.userInput.courseObj).name
+            } else {
+                finalCourse = $scope.userInput.customCourse
+            }
+            var postData = {
+                duration: $scope.userInput.durationHr + ":" + $scope.userInput.durationMin + ":00",
+                memberId: $scope.memberId,
+                repeatBy: $scope.userInput.repeatBy,
+                location: $scope.userInput.location,
+                minParticipant: $scope.userInput.minParticipant,
+                maxParticipant: $scope.userInput.maxParticipant,
+                course: finalCourse,
+                level: $scope.userInput.level,
+                title: $scope.userInput.title,
+                content: $scope.userInput.content,
+                availableTime: JSON.stringify($scope.userInput.availability)
+            }
+            console.dir(postData);
+            var dest = baseUrl + '/CreateEvent';
+            $.ajax(dest, {
+                type: "POST",
+                data: postData,
+                statusCode: {
+                    200: function (response) {
+                        alert(response);
+                        $scope.$apply(function () {
+                            $location.path("/home");
+                        });
+                    }
+                },
+                error: function (err) {
+                    alert(err);
+                }
+            });
+            return false;
+        }
     }
 
     /*********** Timepicker control ***********/
@@ -274,7 +545,6 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                 }
             }
         }
-
     });
 
     function increment(value, max, min, size) {
@@ -297,91 +567,4 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         }
     }
     /*********** Timepicker control ***********/
-
-    $scope.availabilityChange = function () {
-        console.dir($scope.userInput.availability);
-        var availability = $scope.userInput.availability;
-        /*if (availability.mon.length > 0 || availability.tues.length > 0 || availability.wed.length > 0 || availability.thurs.length > 0 || availability.fri.length > 0 || availability.sat.length > 0 || availability.sun.length > 0) {
-            $scope.haveAvailability = true;
-        }*/
-
-        //update availability
-        setTimeout(function () {
-            var availabilityForm = document.getElementById("createGroupForm2");
-            $scope.userInput.availability = {
-                mon: availabilityForm.availabilityMon ? availabilityForm.availabilityMon.value : availability.mon,
-                tues: availabilityForm.availabilityTues ? availabilityForm.availabilityTues.value : availability.tues,
-                wed: availabilityForm.availabilityWed ? availabilityForm.availabilityWed.value : availability.wed,
-                thurs: availabilityForm.availabilityThurs ? availabilityForm.availabilityThurs.value : availability.thurs,
-                fri: availabilityForm.availabilityFri ? availabilityForm.availabilityFri.value : availability.fri,
-                sat: availabilityForm.availabilitySat ? availabilityForm.availabilitySat.value : availability.sat,
-                sun: availabilityForm.availabilitySun ? availabilityForm.availabilitySun.value : availability.sun
-            }
-            var matches;
-            if (availabilityForm.availabilityMon.value) {
-                matches = availabilityForm.availabilityMon.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
-                if (matches.length === 5) {
-                    range = {
-                        from: {
-                            hour: matches[1],
-                            minute: matches[2]
-                        },
-                        to: {
-                            hour: matches[3],
-                            minute: matches[4]
-                        }
-                    }
-                    if (range.from.hour > range.to.hour) {
-                        $scope.createGroupForm2.availabilityMon.$invalid = true;
-                    } else if (range.from.hour == range.to.hour) {
-                        if (range.from.minute >= range.to.minute) {
-                            //console.log($scope.createGroupForm2);
-                            createGroupForm2.form.controls['availabilityMon'].setErrors({
-                                'incorrect': true
-                            });
-                            createGroupForm2.availabilityMon.$invalid = true;
-                        } else {
-                            if ($('#availabilityMon').hasClass('is-invalid')) {
-                                $('#availabilityMon').removeClass('is-invalid');
-                            }
-                        }
-                    } else {
-                        if ($('#availabilityMon').hasClass('is-invalid')) {
-                            $('#availabilityMon').removeClass('is-invalid');
-                        }
-                    }
-                }
-            }
-            console.dir($scope.userInput.availability);
-        }, 500)
-
-    }
-
-    var createGroupForm = document.getElementById("createGroupForm");
-    $scope.submitForm = function () {
-        if ($scope.createGroupForm.$error) {
-            //empty title
-            window.alert("have error")
-        } else {
-            var finalCourse;
-            if ($scope.userInput.courseObj) {
-                finalCourse = JSON.parse($scope.userInput.courseObj).name
-            } else {
-                finalCourse = $scope.userInput.customCourse
-            }
-            var postData = {
-                memberId: $scope.memberId,
-                repeatBy: $scope.userInput.repeatBy,
-                location: $scope.userInput.location,
-                minParticipant: $scope.userInput.minParticipant,
-                maxParticipant: $scope.userInput.maxParticipant,
-                course: finalCourse,
-                level: $scope.userInput.level,
-                title: $scope.userInput.title,
-                content: $scope.userInput.content
-            }
-            console.dir(postData);
-        }
-
-    }
 })
