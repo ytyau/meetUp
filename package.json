@@ -20,6 +20,7 @@
     "crypto": "^1.0.1",
     "dateformat": "^3.0.3",
     "express": "^4.16.4",
+    "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "moment-range": "^4.0.2",
     "mssql": "^5.1.0",

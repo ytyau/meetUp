@@ -27,6 +27,8 @@ var fs = require('fs');
 const Moment = require('moment');
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
+
+var _ = require('lodash');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -534,7 +536,7 @@ app.get('/GetDiscussion', async function (req, res) {
         res.status(400).send("Please specify eventId");
     } else {
         try {
-            var result = await sql.query("Select Username, DiscussTitle, DiscussContent, DiscussionCreatedAt From Discussion, Member Where EventID = '" + eventId + "' And Member.MemberID = Discussion.MemberID");
+            var result = await sql.query("Select Username, DiscussContent, DiscussionCreatedAt From Discussion, Member Where EventID = '" + eventId + "' And Member.MemberID = Discussion.MemberID");
             res.send(result.recordset);
         } catch (err) {
             console.log('Error occurred in GetDiscussion');
@@ -588,8 +590,17 @@ app.get('/ReadNotification', async function (req, res) {
 /********** Read Notification End **********/
 
 /********** Send Notification Stat **********/
-async function SendNoti(memberId, title, content) {
+async function SendNoti(memberId, title, content, courseRecommendation) {
     try {
+        var query = "";
+        if (courseRecommendation)
+        {
+            query = "INSERT INTO Notification (MemberID, NotiTitle, NotiContent, CourseRecommendation) Values ('" + memberId + "', '" + title + "', '" + content + "', '" + courseRecommendation + "')";
+        }
+        else
+        {
+            query = "INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')";
+        }
         var result = await sql.query("INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')");
         if (result.rowsAffected <= 0) {
             console.log("Inserted Notification but no rows affected");
@@ -628,14 +639,67 @@ function SendMail(toMail, subject, content) {
 /********** Generate Recommendation Start **********/
 app.get('/GenerateRecommendation', async function (req, res) {
     try {
-        var result = await sql.query("Select Sth Here"); // Check: if (result.recordset.length > 0)
-        var result = await sql.query("INSERT INTO ..."); // Check: if (result.rowsAffected > 0)
+        var memberToBeHandled = await sql.query("Select JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration From Event, JoinEvent Where JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
+        if (memberToBeHandled.recordset.length > 0)
+        {
+            for (var i = 0; i < memberToBeHandled.recordset.length; i++)
+            {
+                await GenSuggestionForMember(memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].repeatBy, memberToBeHandled.recordset[i].Duration);
+            }
+        }
     } catch (err) {
-        console.log('Error occurred in API_NAME');
+        console.log('Error occurred in GenerateRecommendation');
         console.dir(err);
         res.status(500).send(err);
     }
 });
+
+async function GenSuggestionForMember(memberId, currentEventId, availableTime, course, level, location, repeatBy, duration)
+{
+    try
+    {
+        if (typeof(availableTime) != "obejct")
+        {
+            availableTime = JSON.parse(availableTime);
+        }
+        var query = "Select * From Event Where EventID <> '" + currentEventId + "' And Course = '" + course + "' And Level = '" + level + "' And Location = '" + location + "' And RepeatBy = '" + repeatBy + "'";
+        var similarCourse = await sql.query(query);
+        if (similarCourse.recordset.length > 0)
+        {
+            var courseRecommendation = [];
+            for (var i = 0; i < similarCourse.recordset.length; i++)
+            {
+                var diff = TimeDiffInMin(duration, similarCourse.recordset[i].Duration);
+                if (diff <= 30) // Class duration diff within 30 minutes
+                {
+                    // Check availableTime
+                    var availableTime_cpy = _.cloneDeep(availableTime);
+                    AvailableTimeExtend1Hour(availableTime_cpy);
+                    var mutualTimeAfterAddHour = GetMutualAvailableTimeSlot(availableTime_cpy, similarCourse.recordset[i].AvailableTime);
+                    if (Object.keys(mutualTimeAfterAddHour).length > 0) // Have mutual time slot
+                    {
+                        var mutualTime = GetMutualAvailableTimeSlot(availableTime, similarCourse.recordset[i].AvailableTime);
+                        var tmp = {};
+                        tmp.EventID = similarCourse.recordset[i].EventID;
+                        tmp.DifferentDuration = diff == 0;
+                        tmp.DifferentAvailableTime = Object.keys(mutualTime).length == 0;
+                        courseRecommendation.push(tmp);
+                    }
+                }
+            }
+            if (courseRecommendation.length > 0)
+            {
+
+            }
+        }
+    }
+    catch(err)
+    {
+        console.log('Error occurred in GenSuggestionForMember');
+        console.dir(err);
+    }
+}
+
 /********** Generate Recommendation End **********/
 
 /********** Utility Start **********/
@@ -748,6 +812,89 @@ function GetTimeRangeObjFromStr(period)
     }
     else
         return null;
+}
+
+function TimeDiffInMin(time1, time2)
+{
+    if (time1 > time2)
+    {
+        time2.setDate(time2.getDate() + 1);
+    }
+    return (time2 - time1);
+}
+
+function AvailableTimeExtend1Hour(availableTime)
+{
+    if (availableTime.mon)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.mon);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.mon = from + " - " + to;
+        }
+    }
+    if (availableTime.tues)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.tues);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.tues = from + " - " + to;
+        }
+    }
+    if (availableTime.wed)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.wed);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.wed = from + " - " + to;
+        }
+    }
+    if (availableTime.thurs)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.thurs);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.thurs = from + " - " + to;
+        }
+    }
+    if (availableTime.fri)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.fri);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.fri = from + " - " + to;
+        }
+    }
+    if (availableTime.sat)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.sat);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.sat = from + " - " + to;
+        }
+    }
+    if (availableTime.sun)
+    {
+        var range = GetTimeRangeObjFromStr(availableTime.sun);
+        if (range)
+        {
+            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            availableTime.sun = from + " - " + to;
+        }
+    }
 }
 /********** Utility End **********/
 
