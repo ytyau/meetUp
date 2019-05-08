@@ -486,7 +486,8 @@ app.post('/QuitEvent', async function (req, res) {
                 }
                 else
                 {
-                    res.status(500).send("Fail to find the mutual available time for eventId = " + eventId);
+                    // No one in this group
+                    res.send("Success");
                 }
             }
             else
