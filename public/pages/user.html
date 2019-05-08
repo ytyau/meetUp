@@ -1,0 +1,69 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <ul class="nav justify-content-end mb-3">
+            <li class="nav-item">
+                <a class="nav-link" href="#/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/user">{{role}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn"><span ng-click="logout()">Logout</span></a>
+            </li>
+        </ul>
+        <h1 class="text-center mb-4">My Groups</h1>
+        <section id="newGroup" class="border-top">
+            <p class="text-center pt-3" ng-if="displayEvents.length==0">No group for you? Create one!</p>
+            <table st-table="events" ng-if="displayEvents.length>0" st-safe-src="displayEvents" class="table">
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            <form>
+                                <label for="predicate">Search by column:</label>
+                                <select class="form-control" id="predicate" ng-model="selectedPredicate"
+                                    ng-options="predicate for predicate in predicates"></select>
+                            </form>
+                        </th>
+                        <th colspan="5">
+                            <input st-search="{{selectedPredicate}}" placeholder="Enter keywords here"
+                                class="input-sm form-control" type="search" />
+                        </th>
+                    </tr>
+                    <tr>
+                        <th st-sort="title" scope="col">Title</th>
+                        <th st-sort="course" scope="col">Course</th>
+                        <th st-sort="level" scope="col">Level</th>
+                        <th st-sort="location" scope="col">Location</th>
+                        <th st-sort="repeatBy" scope="col">RepeatBy</th>
+                        <th st-sort="createdAt" st-sort-default="true" scope="col">Created At</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody ng-repeat="event in events">
+                    <tr>
+                        <td>{{event.Title}}</td>
+                        <td>{{event.Course}}</td>
+                        <td>{{event.Level}}</td>
+                        <td>{{event.Location}}</td>
+                        <td>{{event.RepeatBy}}</td>
+                        <td>{{event.EventCreatedAt| date : "dd/MM/yyyy HH:mm"}}</td>
+                        <td>
+                            <button type="button" class="btn btn-default btn-sm" ng-click="viewEvent(event)">
+                                <span class="fa fa-info-circle"></span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <a class="btn btn-dark btn-block" ng-if="displayEvents.length==0" href="#/createGroup">Create a new
+            group</a>
+    </div>
+</body>
+
+</html>
