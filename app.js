@@ -279,7 +279,7 @@ app.get('/GetEventMember', async function (req, res)
     {
         try
         {
-            var query = "Select MemberID, Username, Gender, FLOOR((CAST (GetDate() AS INTEGER) - CAST(DOB AS INTEGER)) / 365.25) AS Age From Member, JoinEvent Where EventID = '" + eventId + "' And Member.MemberID = JoinEvent.MemberID And IsQuit = 0";
+            var query = "Select Member.MemberID, Username, Gender, FLOOR((CAST (GetDate() AS INTEGER) - CAST(DOB AS INTEGER)) / 365.25) AS Age From Member, JoinEvent Where EventID = '" + eventId + "' And Member.MemberID = JoinEvent.MemberID And IsQuit = 0";
             var result = await sql.query(query);
             res.send(result.recordset);
         }
