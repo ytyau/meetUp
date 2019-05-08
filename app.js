@@ -94,7 +94,7 @@ function SendVerificationMail(toMail, memberId, username) {
             console.dir(err);
         } else {
             htmlContent = htmlContent.replace("{{Username}}", username);
-            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/MailVerification?token=" + memberId);
+            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/emailVeri?token=" + memberId);
             htmlContent = htmlContent.replace("{{ExpiryDatetime}}", dateFormat(expireyTime, "dd/mm/yyyy h:MMtt"));
             htmlContent = htmlContent.replace("{{CurrentDate}}", dateFormat("dd mmm, yyyy"));
             SendMail(toMail, 'Verify Your MeetUp Accont', htmlContent);
@@ -338,7 +338,7 @@ app.get('/JoinEvent', async function (req, res) {
     var memberId = req.query.memberId;
     var eventId = req.query.eventId;
     var availableTime = req.query.availableTime;
-    var isToSendNoti = req.query.isToSendNoti;
+    var isToSendNoti = req.query.isToSendNoti == "true";
 
     if (!memberId || !eventId || !availableTime) {
         res.status(400).send("Please specify all fields.");
@@ -348,7 +348,7 @@ app.get('/JoinEvent', async function (req, res) {
             if (result.recordset.length > 0) {
                 if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed) {
                     var mutualTime = GetMutualAvailableTimeSlot(result.recordset[0].AvailableTime, availableTime);
-                    if (mutualTime)
+                    if (Object.keys(mutualTime).length > 0)
                     {
                         query = "Update Event Set AvailableTime = '" + JSON.stringify(mutualTime) + "' Where EventID = '" + eventId + "'";
                         result = await sql.query(query);
