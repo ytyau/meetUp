@@ -510,7 +510,7 @@ app.post('/QuitEvent', async function (req, res)
                 result = await sql.query(query);
                 if (result.recordset.length > 1)
                 {
-
+                    res.send("Success");
                 }
             }
             else
