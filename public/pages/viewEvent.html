@@ -3,7 +3,7 @@
 <head>
 </head>
 
-<body ng-controller="ViewEventController">
+<body>
     <div class="container-fluid">
         <ul class="nav justify-content-end mb-3">
             <li class="nav-item">
@@ -11,6 +11,10 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#/user">{{role}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#/noti">Notificaton <span ng-if="newNotification.length>0"
+                        class="badge badge-pill badge-danger"> {{newNotification.length}}</span></a>
             </li>
             <li class="nav-item">
                 <a class="btn"><span ng-click="logout()">Logout</span></a>

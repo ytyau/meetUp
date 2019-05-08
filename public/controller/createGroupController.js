@@ -1,4 +1,4 @@
-app.controller('CreateGroupController', function ($scope, $location, $cookieStore, $cookies, $filter, districtList, categoryList, langClassList, instrumentClassList, academicClassList) {
+app.controller('CreateGroupController', function ($scope, $location, $cookieStore, $cookies, $filter, districtList, categoryList, langClassList, instrumentClassList, academicClassList, getNoti) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
@@ -8,12 +8,24 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
     /*********** Check if Logged in Start ***********/
     if (!$cookies.get(cookies_memberInfo)) {
         $location.path("/login");
+        //clearInterval(interval)
     } else {
         $scope.memberId = $cookies.get(cookies_memberId);
         $scope.memberInfo = JSON.parse($cookies.get(cookies_memberInfo));
         $scope.role = $scope.memberInfo.Username
     }
     /*********** Check if Logged in End ***********/
+
+    $scope.newNotification;
+    let interval = setInterval(function () {
+        getNoti.pullNoti(memberId).then(function (res) {
+            var notification = angular.copy(res.data);
+            $scope.newNotification = notification.filter(a => a.IsRead == false)
+            //console.log($scope.newNotification);
+        }).catch(function (err) {
+            console.log(err)
+        })
+    }, 3000);
 
     $scope.categorySelected = '';
     $scope.displayCourseList = [];

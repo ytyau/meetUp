@@ -1,4 +1,4 @@
-app.controller('ViewEventController', function ($scope, $http, $location, $window, $cookieStore, $cookies, $filter) {
+app.controller('ViewEventController', function ($scope, $http, $location, $window, $cookieStore, $cookies, $filter, getNoti) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
@@ -11,6 +11,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
     if (!$cookies.get(cookies_memberInfo)) {
         $location.url("/login");
         console.log("Please sign in")
+        //clearInterval(interval)
     } else {
         console.log("logged in");
         memberId = $cookies.get(cookies_memberId)
@@ -19,8 +20,31 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
     }
     /*********** Check if Logged in End ***********/
 
+    $scope.logout = function () {
+        //console.log("signout now");
+        if ($cookies.get(cookies_memberInfo)) {
+            $cookies.remove(cookies_memberInfo);
+        }
+        if ($cookies.get(cookies_memberId)) {
+            $cookies.remove(cookies_memberId);
+        }
+        $location.path("/login");
+    }
+
     var eventID = $location.search().id;
+    var quitEventID = $location.search().quit;
     //console.log(eventID);
+
+    $scope.newNotification;
+    let interval = setInterval(function () {
+        getNoti.pullNoti(memberId).then(function (res) {
+            var notification = angular.copy(res.data);
+            $scope.newNotification = notification.filter(a => a.IsRead == false)
+            //console.log($scope.newNotification);
+        }).catch(function (err) {
+            console.log(err)
+        })
+    }, 3000);
 
     var url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID + '&memberId=' + memberId;
     $http.get(url).then(function (response) {
@@ -486,6 +510,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
             //empty title
             window.alert("have error")
         } else {
+            $scope.quitGroup(quitEventID);
             var data = {
                 memberId: memberId,
                 eventId: eventID,
@@ -505,10 +530,10 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
         }
     }
 
-    $scope.quitGroup = function () {
+    $scope.quitGroup = function (id) {
         var dest = baseUrl + '/QuitEvent';
         var postData = {
-            eventId: eventID,
+            eventId: id ? id : eventID,
             joinId: $scope.eventInfo.JoinID
         }
 

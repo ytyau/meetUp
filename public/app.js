@@ -43,6 +43,11 @@ app.config(function ($routeProvider) {
             controller: 'UserController'
         })
 
+        .when('/noti', {
+            templateUrl: 'pages/viewNotification.html',
+            controller: 'ViewNotiController'
+        })
+
         .otherwise({
             redirectTo: '/'
         });

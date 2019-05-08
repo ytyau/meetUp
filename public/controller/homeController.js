@@ -1,5 +1,5 @@
 //TODO: pager
-app.controller('HomeController', function ($scope, $http, $location, $window, $cookieStore, $cookies, $filter) {
+app.controller('HomeController', function ($scope, $http, $location, $window, $cookieStore, $cookies, $filter, getNoti) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
@@ -12,6 +12,7 @@ app.controller('HomeController', function ($scope, $http, $location, $window, $c
     if (!$cookies.get(cookies_memberInfo)) {
         $location.path("/login");
         console.log("Please sign in")
+        //clearInterval(interval)
     } else {
         console.log("logged in");
         memberId = $cookies.get(cookies_memberId)
@@ -19,6 +20,17 @@ app.controller('HomeController', function ($scope, $http, $location, $window, $c
         $scope.role = memberInfo.Username
     }
     /*********** Check if Logged in End ***********/
+
+    $scope.newNotification;
+    let interval = setInterval(function () {
+        getNoti.pullNoti(memberId).then(function (res) {
+            var notification = angular.copy(res.data);
+            $scope.newNotification = notification.filter(a => a.IsRead == false)
+            //console.log($scope.newNotification);
+        }).catch(function (err) {
+            console.log(err)
+        })
+    }, 3000);
 
     $scope.displayEvents;
     $scope.event;
