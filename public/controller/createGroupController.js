@@ -10,7 +10,8 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         $location.path("/login");
     } else {
         $scope.memberId = $cookies.get(cookies_memberId);
-        $scope.memberInfo = $cookies.get(cookies_memberInfo);
+        $scope.memberInfo = JSON.parse($cookies.get(cookies_memberInfo));
+        $scope.role = $scope.memberInfo.Username
     }
     /*********** Check if Logged in End ***********/
 
@@ -136,6 +137,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilityMon.$invalid = true;
+            $scope.error.availabilityMon = true;
         }
 
         if (availabilityForm.availabilityTues.value) {
@@ -162,6 +166,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilityTues.$invalid = true;
+            $scope.error.availabilityTues = true;
         }
 
         if (availabilityForm.availabilityWed.value) {
@@ -188,6 +195,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilityWed.$invalid = true;
+            $scope.error.availabilityWed = true;
         }
 
         if (availabilityForm.availabilityThurs.value) {
@@ -214,6 +224,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilityThurs.$invalid = true;
+            $scope.error.availabilityThurs = true;
         }
 
         if (availabilityForm.availabilityFri.value) {
@@ -240,6 +253,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilityFri.$invalid = true;
+            $scope.error.availabilityFri = true;
         }
 
         if (availabilityForm.availabilitySat.value) {
@@ -266,6 +282,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilitySat.$invalid = true;
+            $scope.error.availabilitySat = true;
         }
 
         if (availabilityForm.availabilitySun.value) {
@@ -292,6 +311,9 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                     //console.log("correct")
                 }
             }
+        } else {
+            $scope.createGroupForm2.availabilitySun.$invalid = true;
+            $scope.error.availabilitySun = true;
         }
 
         $scope.userInput.availability = {

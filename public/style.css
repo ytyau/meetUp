@@ -2,6 +2,10 @@ body {
     height: 100vh;
 }
 
+textarea {
+    resize: none;
+}
+
 /*TODO:vertical alignment*/
 .vertical-align {
     position: absolute;

@@ -9,7 +9,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
 
     /*********** Check if Logged in Start ***********/
     if (!$cookies.get(cookies_memberInfo)) {
-        $location.path("/login");
+        $location.url("/login");
         console.log("Please sign in")
     } else {
         console.log("logged in");
@@ -20,23 +20,39 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
     /*********** Check if Logged in End ***********/
 
     var eventID = $location.search().id;
-    console.log(eventID);
+    //console.log(eventID);
 
-    var url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID;
+    var url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID + '&memberId=' + memberId;
     $http.get(url).then(function (response) {
         $scope.eventInfo = angular.copy(response.data.recordsets[0][0]);
-        $scope.eventInfo.AvailableTime = JSON.parse($scope.eventInfo.AvailableTime);
+        //console.dir($scope.eventInfo);
+        if ($scope.eventInfo.AvailableTime) {
+            $scope.eventInfo.AvailableTime = JSON.parse($scope.eventInfo.AvailableTime);
+        }
         console.dir($scope.eventInfo);
     })
 
-    $scope.inGroup = false;
-    var url = baseUrl + '/GetEventMember?eventId=' + eventID;
-    $http.get(url).then(function (response) {
+    $scope.inGroup = [];
+    var url2 = baseUrl + '/GetEventMember?eventId=' + eventID;
+    $http.get(url2).then(function (response) {
         $scope.memberInfo = angular.copy(response.data);
-        $scope.inGroup = $scope.memberInfo.filter((a) =>
-            a.memberID == memberId
-        )
         console.dir($scope.memberInfo);
+        $scope.inGroup = $scope.memberInfo.filter((a) =>
+            a.MemberID == memberId
+        )
+        console.dir($scope.inGroup);
+    })
+
+    var url3 = baseUrl + '/GetDiscussion';
+    $scope.commentThread;
+    $http.get(url3, {
+        params: {
+            eventId: eventID
+        }
+    }).then(function (response) {
+        $scope.commentThread = angular.copy(response.data);
+    }).catch(function (err) {
+        console.log(err);
     })
 
     $scope.haveAvailability = false;
@@ -489,4 +505,51 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
         }
     }
 
+    $scope.quitGroup = function () {
+        var dest = baseUrl + '/QuitEvent';
+        var postData = {
+            eventId: eventID,
+            joinId: $scope.eventInfo.JoinID
+        }
+
+        $.ajax(dest, {
+            type: "POST",
+            data: postData,
+            statusCode: {
+                200: function (response) {
+                    alert(response.data);
+                    location.reload();
+                }
+            },
+            error: function (err) {
+                alert(err.data);
+            }
+        });
+    }
+
+    $scope.input = {
+        newComments: ''
+    };
+    $scope.submitComment = function () {
+        console.log($scope.input.newComments);
+        var dest2 = baseUrl + '/PostDiscussion';
+        var postData = {
+            memberId: memberId,
+            eventId: eventID,
+            discussContent: $scope.input.newComments
+        }
+        $.ajax(dest2, {
+            type: "POST",
+            data: postData,
+            statusCode: {
+                200: function (response) {
+                    alert(response);
+                    location.reload();
+                }
+            },
+            error: function (err) {
+                alert(err.data);
+            }
+        });
+    }
 })

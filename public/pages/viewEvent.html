@@ -3,17 +3,14 @@
 <head>
 </head>
 
-<body>
+<body ng-controller="ViewEventController">
     <div class="container-fluid">
         <ul class="nav justify-content-end mb-3">
-            <li class="nav-item">
-                <a class="nav-link disabled">{{role}}</a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link" href="#/">Home</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#/about">About</a>
+                <a class="nav-link" href="#/user">{{role}}</a>
             </li>
             <li class="nav-item">
                 <a class="btn"><span ng-click="logout()">Logout</span></a>
@@ -24,7 +21,7 @@
             {{eventInfo.Course}}
             /
             {{eventInfo.Level}}</h4>
-        <div class="card mt-3" ng-if="eventInfo">
+        <div class="card mt-3 mb-3" ng-if="eventInfo">
             <div class="card-header">Group details</div>
             <div class="card-body">
                 <p><i class="fas fa-map-marker-alt m-1"></i>Location: {{eventInfo.Location}}</p>
@@ -67,17 +64,45 @@
             </div>
         </div>
 
-        <div class="card mt-3 mb-3" ng-if="memberInfo">
+        <div class="card mb-3" ng-if="memberInfo">
             <div class="card-header">Group members</div>
             <div class="card-body">
                 <div ng-repeat="member in memberInfo" ng-class="member.Gender=='F'? 'female' : 'male'">
                     <i class="fas fa-user-alt m-1"></i> {{member.Username}} (aged {{member.Age}})
                 </div>
-                <button class="btn btn-dark btn-block" ng-click="quitGroup()" type="button" style="color: white"
-                    ng-disabled="inGroup.length==0">Quit Group</button>
+                <button class="btn btn-dark btn-block mt-4 " ng-click="quitGroup()" type="button" style="color: white"
+                    ng-if="!inGroup.length==0">Quit Group</button>
             </div>
         </div>
-        <div class="card mb-3" ng-if="!inGroup.length==0">
+        <div class="card mb-3" ng-if="inGroup.length>0">
+            <div class="card-header">Discussion</div>
+            <div class="card-body">
+                <div ng-if="!commentThread" class="text-center mb-3">No comments yet. Leave yours!</div>
+                <div ng-if="commentThread">
+                    <div class="border-bottom mt-3" ng-repeat="comment in commentThread">
+                        <h6>{{comment.Username? comment.Username: 'Admin'}}<br>
+                            <span class="font-weight-light"
+                                style="font-size: 80%">{{comment.DiscussionCreatedAt| date: "dd/MM/yyyy HH:mm"}}</span>
+                        </h6>
+                        <p>{{comment.DiscussContent}}</p>
+                    </div>
+                </div>
+                <div>
+                    <form class="mt-4" novalidate>
+                        <div class="form-row align-items-center">
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" ng-model="input.newComments">
+                            </div>
+                            <div class="col-sm-2">
+                                <button class="btn btn-dark btn-block" ng-click="submitComment()" type="button"
+                                    style="color: white" ng-disabled="newComments.length==0">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-3" ng-if="inGroup.length==0">
             <div class="card-header">Join event</div>
             <div class="card-body">
                 <p>Please state your best availability for each weekday. Leave it blank if you are not

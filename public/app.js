@@ -38,6 +38,11 @@ app.config(function ($routeProvider) {
             controller: 'emailVeriController'
         })
 
+        .when('/user', {
+            templateUrl: 'pages/user.html',
+            controller: 'UserController'
+        })
+
         .otherwise({
             redirectTo: '/'
         });
