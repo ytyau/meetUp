@@ -94,7 +94,7 @@ function SendVerificationMail(toMail, memberId, username) {
             console.dir(err);
         } else {
             htmlContent = htmlContent.replace("{{Username}}", username);
-            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/emailVeri?token=" + memberId);
+            htmlContent = htmlContent.replace("{{link}}", "http://localhost:3000/#/login?token=" + memberId);
             htmlContent = htmlContent.replace("{{ExpiryDatetime}}", dateFormat(expireyTime, "dd/mm/yyyy h:MMtt"));
             htmlContent = htmlContent.replace("{{CurrentDate}}", dateFormat("dd mmm, yyyy"));
             SendMail(toMail, 'Verify Your MeetUp Accont', htmlContent);
@@ -372,7 +372,7 @@ app.get('/JoinEvent', async function (req, res) {
                         res.status(400).send("Fail to find mutual available time");
                     }
                 } else {
-                    res.status(400).send("Exceed max participants limit.");
+                    res.status(400).send("Exceed max participants limit or the event is closed.");
                 }
             } else {
                 res.status(400).send("Cannot find a event with ID = " + eventId);
@@ -465,7 +465,9 @@ app.post('/QuitEvent', async function (req, res) {
                         mutualTimeslot = JSON.stringify(mutualTimeslot);
                     }
                     query = "Update Event Set AvailableTime = '" + mutualTimeslot + "' Where EventID = '" + eventId + "'";
+                    console.log(query);
                     result = sql.query(query);
+                    console.dir(result);
                     if (result.rowsAffected > 0)
                     {
                         res.send("Success");
