@@ -33,6 +33,11 @@ app.config(function ($routeProvider) {
             controller: 'ViewEventController'
         })
 
+        .when('/emailVeri', {
+            templateUrl: 'pages/emailVeri.html',
+            controller: 'emailVeriController'
+        })
+
         .otherwise({
             redirectTo: '/'
         });

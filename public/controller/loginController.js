@@ -1,15 +1,28 @@
-app.controller('LoginController', function ($scope, $location, $cookies) {
+app.controller('LoginController', function ($scope, $location, $http, $cookies) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
     const cookies_memberInfo = "username";
     const cookies_memberId = "memberId";
 
-    /*********** Check if Logged in Start ***********/
-    if ($cookies.get(cookies_memberInfo)) {
-        $location.path("/");
+    var token = $location.search().token;
+    if (token) {
+        var url = "http://localhost:3000/MailVerification?token=" + token;
+        $scope.veriResult = "";
+        $http.get(url).then(function (res) {
+            $scope.veriResult = 'alert-success';
+            $scope.veriDisplay = "Success"
+        }).catch(function (err) {
+            $scope.veriResult = 'alert-danger';
+            $scope.veriDisplay = "Failed"
+        })
+    } else {
+        /*********** Check if Logged in Start ***********/
+        if ($cookies.get(cookies_memberInfo)) {
+            $location.path("/");
+        }
+        /*********** Check if Logged in End ***********/
     }
-    /*********** Check if Logged in End ***********/
 
     $scope.loginForm = document.getElementById("loginForm");
     $scope.email;

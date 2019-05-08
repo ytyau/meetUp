@@ -29,9 +29,13 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
         console.dir($scope.eventInfo);
     })
 
+    $scope.inGroup = false;
     var url = baseUrl + '/GetEventMember?eventId=' + eventID;
     $http.get(url).then(function (response) {
         $scope.memberInfo = angular.copy(response.data);
+        $scope.inGroup = $scope.memberInfo.filter((a) =>
+            a.memberID == memberId
+        )
         console.dir($scope.memberInfo);
     })
 
