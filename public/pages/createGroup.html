@@ -4,7 +4,7 @@
 </head>
 
 <body>
-    <div class="container-fluid" ng-controller="CreateGroupController">
+    <div class="container-fluid">
         <ul class="nav justify-content-end mb-3">
             <li class="nav-item">
                 <a class="nav-link disabled">{{role}}</a>
@@ -109,49 +109,6 @@
                                 Please enter this field</span>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="repeatBy" class="col-sm-2 col-form-label">Repeat by</label>
-                        <div class="col-sm-10">
-                            <select name="repeatBy" class="form-control" id="repeatBy" ng-model="userInput.repeatBy"
-                                ng-class="{ 'is-invalid' : createGroupForm.repeatBy.$invalid && createGroupForm.repeatBy.$touched }"
-                                required>
-                                <option value="{{level}}" ng-repeat="level in displayLevelList">{{level}}</option>
-                            </select>
-                            <span class="invalid-feedback"
-                                ng-show="createGroupForm.repeatBy.$invalid && createGroupForm.repeatBy.$touched"
-                                class="help-block">
-                                Please enter this field</span>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="minParti" class="col-sm-2 col-form-label">Min. participant</label>
-                        <div class="col-sm-10">
-                            <input type="number" name="minParti" class="form-control"
-                                placeholder="Enter minimum number of participant" id="title"
-                                ng-model="userInput.minParticipant"
-                                ng-class="{ 'is-invalid' : createGroupForm.minParti.$invalid && createGroupForm.minParti.$touched }"
-                                min="1" max="99" required>
-                            <span class="invalid-feedback"
-                                ng-show="createGroupForm.minParti.$invalid && createGroupForm.minParti.$touched"
-                                class="help-block">
-                                Please enter a value larger than 0 and smaller than or equal to max. participant</span>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="maxParti" class="col-sm-2 col-form-label">Max. participant</label>
-                        <div class="col-sm-10">
-                            <input type="number" name="maxParti" class="form-control"
-                                placeholder="Enter maximum number of participant" id="title"
-                                ng-model="userInput.maxParticipant"
-                                ng-class="{ 'is-invalid' : createGroupForm.maxParti.$invalid && createGroupForm.maxParti.$touched }"
-                                min="1" max="99" required>
-                            <span class="invalid-feedback"
-                                ng-show="createGroupForm.maxParti.$invalid && createGroupForm.maxParti.$touched"
-                                class="help-block">
-                                Please enter a value larger than 0 and larger than or equal to min. participant</span>
-                        </div>
-                    </div>
-
                 </form>
             </div>
         </div>
@@ -165,16 +122,13 @@
                         <label for="availabilityMon" class="col-sm-2 col-form-label">Monday</label>
                         <div class="col-sm-10">
                             <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilityMon" ng-model="availability.mon" id="availabilityMon"
-                                    class="form-control" type="text" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availability.mon.$invalid && createGroupForm2.availability.mon.$touched }">
+                                <input name="availabilityMon" id="availabilityMon" class="form-control" type="text"
+                                    ng-blur="availabilityChange()">
                                 <span class="input-group-text" style="">
                                     <i aria-hidden="true" class="fa fa-calendar"></i>
                                 </span>
-                                <p class="invalid-feedback" id="availabilityMonErr"
-                                    ng-show="createGroupForm2.availability.mon.$invalid && createGroupForm2.availability.mon.$touched"
-                                    class="help-block">
-                                    Ending
+                                <p class="invalid-feedback" ng-show="createGroupForm2.availabilityMon.$touched"
+                                    class="help-block">Ending
                                     time should be later than starting time</p>
                             </div>
 
@@ -257,7 +211,7 @@
         </div>
         <div class="mt-3 mb-3">
             <button class="btn btn-dark btn-block" ng-click="submitForm()" type="button" style="color: white"
-                ng-disabled="(createGroupForm.$invalid || createGroupForm2.$invalid)">Submit</button></div>
+                ng-disabled="createGroupForm.$invalid && !haveAvailability">Submit</button></div>
     </div>
 </body>
 
