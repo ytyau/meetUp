@@ -413,7 +413,7 @@ async function SendJoinEventNoti(memberId, eventId) {
                 message = lackParti + " more members to go!";
             }
         }
-        result = await sql.query("Select Username, Email, Event.Title, JoinEvent.MemberID From JoinEvent, Member, Event Where Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And JoinEvent.EventID = '" + eventId + "' And IsQuit = 0");
+        result = await sql.query("Select Username, Email, Event.Title, JoinEvent.MemberID From JoinEvent, Member, Event Where JoinEvent.EventID = Event.EventID And Member.MemberID = JoinEvent.MemberID And JoinEvent.MemberID <> '" + memberId + "' And JoinEvent.EventID = '" + eventId + "' And IsQuit = 0");
         console.dir(result);
         for (i = 0; i < result.recordset.length; i++) {
             SendNoti(result.recordset[i].MemberID, title, message);
@@ -536,7 +536,7 @@ app.get('/GetDiscussion', async function (req, res) {
         res.status(400).send("Please specify eventId");
     } else {
         try {
-            var result = await sql.query("Select Username, DiscussContent, DiscussionCreatedAt From Discussion, Member Where EventID = '" + eventId + "' And Member.MemberID = Discussion.MemberID UNION Select null, DiscussContent, DiscussionCreatedAt From Discussion Where EventID = '" + eventId + "' And MemberID is null Order by DiscussionCreatedAt DESC");
+            var result = await sql.query("Select Username, DiscussContent, DiscussionCreatedAt From Discussion, Member Where EventID = '" + eventId + "' And Member.MemberID = Discussion.MemberID UNION Select null, DiscussContent, DiscussionCreatedAt From Discussion Where EventID = '" + eventId + "' And MemberID is null Order by DiscussionCreatedAt");
             res.send(result.recordset);
         } catch (err) {
             console.log('Error occurred in GetDiscussion');
@@ -555,7 +555,7 @@ app.get('/GetNotification', async function (req, res) {
         res.status(400).send("Please specify all fields.");
     } else {
         try {
-            var result = await sql.query("Select * From Notification Where MemberID = '" + memberId + "'");
+            var result = await sql.query("Select * From Notification Where MemberID = '" + memberId + "' Order by NotiCreatedAt DESC");
             res.send(result.recordset);
         } catch (err) {
             console.log('Error occurred in GetNotification');
