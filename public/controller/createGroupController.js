@@ -19,7 +19,7 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
     $scope.displayLevelList = [];
     $scope.districtList = districtList;
     $scope.categoryList = categoryList;
-    $scope.repeatPeriod = ["day", "week", "2 weeks", "month"]
+    $scope.repeatPeriod = ["Day", "Week", "2 weeks", "Month"]
     $scope.haveAvailability = false;
 
     $scope.userInput = {

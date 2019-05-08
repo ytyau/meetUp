@@ -28,6 +28,11 @@ app.config(function ($routeProvider) {
             controller: 'CreateGroupController'
         })
 
+        .when('/viewEvent', {
+            templateUrl: 'pages/viewEvent.html',
+            controller: 'ViewEventController'
+        })
+
         .otherwise({
             redirectTo: '/'
         });
