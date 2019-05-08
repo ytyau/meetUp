@@ -23,6 +23,10 @@ var nodemailer = require('nodemailer');
 var dateFormat = require('dateformat');
 
 var fs = require('fs');
+
+const Moment = require('moment');
+const MomentRange = require('moment-range');
+const moment = MomentRange.extendMoment(Moment);
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -262,6 +266,33 @@ app.get('/GetEvent', async function (req, res) {
         }
     }
 });
+/********** Get Event Member Start **********/
+app.get('/GetEventMember', async function (req, res)
+{
+    var eventId = req.query.eventId;
+    
+    if (!eventId)
+    {
+        res.status(400).send("Please specify all fields.");
+    }
+    else
+    {
+        try
+        {
+            var query = "Select username, Gender, FLOOR((CAST (GetDate() AS INTEGER) - CAST(DOB AS INTEGER)) / 365.25) AS Age From Member, JoinEvent Where EventID = '" + eventId + "' And Member.MemberID = JoinEvent.MemberID And IsQuit = 0";
+            var result = await sql.query(query);
+            res.send(result.recordset);
+        }
+        catch (err)
+        {
+            console.log('Error occurred in GetEventMember');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+    }
+});
+/********** Get Event Member End **********/
+
 /********** Get Event End **********/
 
 /********** Search Event Start **********/
@@ -567,84 +598,119 @@ function GetMutualAvailableTimeSlot(availableTime1, availableTime2) {
     availableTime1 = JSON.parse(availableTime1);
     availableTime2 = JSON.parse(availableTime2);
 
-    if (availableTime1.mon && availableTime2.mon) {
-
+    if (availableTime1.mon && availableTime2.mon)
+    {
+        var tmp = GetMutualAvaiableHourMinute(availableTime1.mon, availableTime2.mon);
+        if (tmp)
+        {
+            mutualTime.mon = tmp;
+        }
+    }
+    if (availableTime1.tue && availableTime2.tue)
+    {
+        var tmp = GetMutualAvaiableHourMinute(availableTime1.tue, availableTime2.tue);
+        if (tmp)
+        {
+            mutualTime.tue = tmp;
+        }
+    }
+    if (availableTime1.wed && availableTime2.wed)
+    {
+        var tmp = GetMutualAvaiableHourMinute(availableTime1.wed, availableTime2.wed);
+        if (tmp)
+        {
+            mutualTime.wed = tmp;
+        }
+    }
+    if (availableTime1.thurs && availableTime2.thurs)
+    {
+        var tmp = GetMutualAvaiableHourMinute(availableTime1.thurs, availableTime2.thurs);
+        if (tmp)
+        {
+            mutualTime.thurs = tmp;
+        }
+    }
+    if (availableTime1.sat && availableTime2.sat)
+    {
+        var tmp = GetMutualAvaiableHourMinute(availableTime1.sat, availableTime2.sat);
+        if (tmp)
+        {
+            mutualTime.sat = tmp;
+        }
+    }
+    if (availableTime1.sun && availableTime2.sun)
+    {
+        var tmp = GetMutualAvaiableHourMinute(availableTime1.sun, availableTime2.sun);
+        if (tmp)
+        {
+            mutualTime.sun = tmp;
+        }
     }
 
+    return mutualTime;
 }
 
-function GetMutualAvaiableHourMinute(time1, time2) {
-    var range1 = {};
-    var range2 = {};
+function GetMutualAvaiableHourMinute(time1, time2)
+{
+    var range1 = GetTimeRangeObjFromStr(time1);
+    var range2 = GetTimeRangeObjFromStr(time2);
 
-    var matches = time1.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
-    if (matches.length === 5) {
-        range1 = {
-            from: {
-                hour: matches[1],
-                minute: matches[2]
-            },
-            to: {
-                hour: matches[3],
-                minute: matches[4]
-            }
-        }
-    }
-
-    var matches = time2.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
-    if (matches.length === 5) {
-        range2 = {
-            from: {
-                hour: matches[1],
-                minute: matches[2]
-            },
-            to: {
-                hour: matches[3],
-                minute: matches[4]
-            }
-        }
-    }
-
-    if (range1.from.hour > range2.from.hour) {
-        // swap two element
-        var tmp = range1;
-        range1 = range2;
-        range2 = tmp;
-    }
-
-    // Then range1.from must <= range2.from
-    if (range1.from.hour == range2.from.hour)
+    if (range1 && range2)
     {
-        if (range1.to.hour > range2.to.hour)
+        start1 = moment('2019-01-01 ' + range1.from.hour + ":" + range1.from.minute);
+        end1 = moment('2019-01-01 ' + range1.to.hour + ":" + range1.to.minute);
+        start2 = moment('2019-01-01 ' + range2.from.hour + ":" + range2.from.minute);
+        end2 = moment('2019-01-01 ' + range2.to.hour + ":" + range2.to.minute);
+
+        var range1 = moment.range(start1, end1);
+        var range2 = moment.range(start2, end2);
+        var mutualRange = range1.intersect(range2);
+
+        if (mutualRange)
         {
-            return range1.from.hour + ":" + range1.from.minute + " - " + range2.to.hour + ":" + range2.to.minute;
-        }
-        else if (range1.to.hour == range2.to.hour)
-        {
-            return range1.from.hour + ":" + range1.from.minute + " - " + range2.to.hour + ":" + Math.min(range1.to.minute, range2.to.minute);
+            // console.log(mutualRange.start.format("HH:mm"));
+            // console.log(mutualRange.end.format("HH:mm"));
+            return mutualRange.start.format("HH:mm") + " - " + mutualRange.end.format("HH:mm");
         }
         else
-        {
-            return range1.from.hour + ":" + range1.from.minute + " - " + range1.to.hour + ":" + range1.to.minute;
-        }
+            return null;
     }
     else
-    {
+        return null;
+}
 
+function GetTimeRangeObjFromStr(period)
+{
+    var matches = period.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+    if (matches.length === 5) {
+        return {
+            from: {
+                hour: matches[1],
+                minute: matches[2]
+            },
+            to: {
+                hour: matches[3],
+                minute: matches[4]
+            }
+        };
     }
-
+    else
+        return null;
 }
 /********** Utility End **********/
 
 /********** Debug Start **********/
-app.get('/Debug', async function (req, res)
+app.post('/Debug', async function (req, res)
 {
-    
+    var j1 = req.body['j1'];
+    var j2 = req.body['j2'];
+    res.send(GetMutualAvailableTimeSlot(j1, j2));
 });
 /********** Debug End **********/
 
 /********** Website Start **********/
-app.all('/', function (req, res) {
+app.all('/', function (req, res)
+{
     // send this to client
     res.status(200).sendFile(path.join(__dirname + '/../public/index.html'));
 });
