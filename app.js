@@ -276,7 +276,7 @@ app.get('/GetEvent', async function (req, res)
             }
             else if (memberId)
             {
-                selectItem = "Event.EventID, AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
+                selectItem = "Event.EventID, Event.AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
                 fromTable = "Event, JoinEvent";
                 condition = "MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0";
                 orderBy = " Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
@@ -767,11 +767,32 @@ function GetMutualAvaiableHourMinute(time1, time2)
         range2 = tmp;
     }
 
+    // Then range1.from must <= range2.from
+    if (range1.from.hour == range2.from.hour)
+    {
+        if (range1.to.hour > range2.to.hour)
+        {
+            return range1.from.hour + ":" + range1.from.minute + " - " + range2.to.hour + ":" + range2.to.minute;
+        }
+        else if (range1.to.hour == range2.to.hour)
+        {
+            return range1.from.hour + ":" + range1.from.minute + " - " + range2.to.hour + ":" + Math.min(range1.to.minute, range2.to.minute);
+        }
+        else
+        {
+            return range1.from.hour + ":" + range1.from.minute + " - " + range1.to.hour + ":" + range1.to.minute;
+        }
+    }
+    else
+    {
+
+    }
+
 }
 /********** Utility End **********/
 
 /********** Debug Start **********/
-app.post('/Debug', async function (req, res)
+app.get('/Debug', async function (req, res)
 {
     
 });
