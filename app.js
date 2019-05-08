@@ -196,6 +196,7 @@ app.post('/SignIn', async function (req, res) {
 app.post('/CreateEvent', async function (req, res) {
     var memberId = req.body['memberId'];
     var availableTime = req.body['availableTime'];
+    var duration = req.body['duration'];
     var repeatBy = req.body['repeatBy'];
     var location = req.body['location'];
     var minParticipant = req.body['minParticipant'];
@@ -205,7 +206,7 @@ app.post('/CreateEvent', async function (req, res) {
     var title = req.body['title'];
     var content = req.body['content'];
 
-    if (!memberId || !availableTime || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || !content)
+    if (!memberId || !availableTime ||!duration || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || !content)
     {
 		res.status(400).send("Please specify all fields.");
     }
@@ -214,7 +215,7 @@ app.post('/CreateEvent', async function (req, res) {
         try
         {
             var eventId = uuidv1();
-            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + availableTime + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
+            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, AvailableTime, Duration, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + availableTime + "', '" + duration + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
             // console.log(query);
             var result = await sql.query(query);
             // console.dir(result);
@@ -385,7 +386,7 @@ app.get('/JoinEvent', async function (req, res)
                     result = await sql.query(query);
                     if (result.rowsAffected > 0)
                     {
-                        query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID) VALUES ('" + eventId + "', '" + memberId  + "');";
+                        query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID, AvailableTime) VALUES ('" + eventId + "', '" + memberId  + "', '" + availableTime + "');";
                         result = await sql.query(query);
                         if (result.rowsAffected > 0)
                         {
@@ -491,8 +492,9 @@ async function SendEnoughGroupMemberMail(username, groupName, toMail)
 app.post('/QuitEvent', async function (req, res)
 {
     var joinId = req.body['joinId'];
+    var eventId = req.body['eventId'];
     
-    if (!joinId)
+    if (!joinId || !eventId)
     {
         res.status(400).send("Please specify all fields.");
     }
@@ -503,7 +505,13 @@ app.post('/QuitEvent', async function (req, res)
             var result = await sql.query("Update JoinEvent Set IsQuit = 1 Where JoinID = '" + joinId + "'");
             if (result.rowsAffected > 0)
             {
-                res.send("Success");
+                // Update event availableTime
+                var query = "Select AvailableTime From JoinEvent Where EventID = '" + eventId + "' And IsQuit = 0";
+                result = await sql.query(query);
+                if (result.recordset.length > 1)
+                {
+                    res.send("Success");
+                }
             }
             else
             {
@@ -686,6 +694,88 @@ function SendMail(toMail, subject, content)
     });
 }
 /********** Send Mail End **********/
+
+/********** Generate Recommendation Start **********/
+app.get('/GenerateRecommendation', async function (req, res)
+{
+    try
+        {
+            var result = await sql.query("Select Sth Here"); // Check: if (result.recordset.length > 0)
+            var result = await sql.query("INSERT INTO ..."); // Check: if (result.rowsAffected > 0)
+        }
+        catch (err)
+        {
+            console.log('Error occurred in API_NAME');
+            console.dir(err);
+            res.status(500).send(err);
+        }
+});
+/********** Generate Recommendation End **********/
+
+/********** Utility Start **********/
+function GetMutualAvailableTimeSlot(availableTime1, availableTime2)
+{
+    var mutualTime = {};
+    availableTime1 = JSON.parse(availableTime1);
+    availableTime2 = JSON.parse(availableTime2);
+
+    if (availableTime1.mon && availableTime2.mon)
+    {
+
+    }
+    
+}
+
+function GetMutualAvaiableHourMinute(time1, time2)
+{
+    var range1 = {};
+    var range2 = {};
+
+    var matches = time1.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+    if (matches.length === 5) {
+        range1 = {
+            from: {
+                hour: matches[1],
+                minute: matches[2]
+            },
+            to: {
+                hour: matches[3],
+                minute: matches[4]
+            }
+        }
+    }
+
+    var matches = time2.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+    if (matches.length === 5) {
+        range2 = {
+            from: {
+                hour: matches[1],
+                minute: matches[2]
+            },
+            to: {
+                hour: matches[3],
+                minute: matches[4]
+            }
+        }
+    }
+
+    if (range1.from.hour > range2.from.hour)
+    {
+        // swap two element
+        var tmp = range1;
+        range1 = range2;
+        range2 = tmp;
+    }
+
+}
+/********** Utility End **********/
+
+/********** Debug Start **********/
+app.post('/Debug', async function (req, res)
+{
+    
+});
+/********** Debug End **********/
 
 /********** Website Start **********/
 app.all('/', function (req, res) {
