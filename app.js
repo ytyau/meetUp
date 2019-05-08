@@ -109,16 +109,16 @@ app.get('/MailVerification', async function (req, res) {
 
     if (!token) {
         // Fail case
-        res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to 404 page
+        res.status(400).send("Please specify all fields");
     } else {
         try {
             var result = await sql.query("Update Member Set IsVerified = 1 Where MemberID = '" + token + "'");
             if (result.rowsAffected > 0) {
                 // Success case
-                res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to success page
+                res.send("Success");
             } else {
                 // Fail case
-                res.status(200).sendFile(path.join(__dirname + '/public/index.html')); // TODO: change url to fail page
+                res.status(400).send("Token is invalid");
             }
         } catch (err) {
             console.log('Error occurred in MailVerification');
@@ -344,24 +344,32 @@ app.get('/JoinEvent', async function (req, res) {
         res.status(400).send("Please specify all fields.");
     } else {
         try {
-            var result = await sql.query("Select MaxParticipant, CurrentMemberCnt, IsClosed From Event Where EventID = '" + eventId + "'"); // Check: if (result.recordset.length > 0)
+            var result = await sql.query("Select AvailableTime, MaxParticipant, CurrentMemberCnt, IsClosed From Event Where EventID = '" + eventId + "'");
             if (result.recordset.length > 0) {
                 if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed) {
-                    query = "Update Event Set AvailableTime = '" + availableTime + "' Where EventID = '" + eventId + "'";
-                    result = await sql.query(query);
-                    if (result.rowsAffected > 0) {
-                        query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID, AvailableTime) VALUES ('" + eventId + "', '" + memberId + "', '" + availableTime + "');";
+                    var mutualTime = GetMutualAvailableTimeSlot(result.recordset[0].AvailableTime, availableTime);
+                    if (mutualTime)
+                    {
+                        query = "Update Event Set AvailableTime = '" + JSON.stringify(mutualTime) + "' Where EventID = '" + eventId + "'";
                         result = await sql.query(query);
                         if (result.rowsAffected > 0) {
-                            res.send("Success");
-                            if (isToSendNoti) {
-                                SendJoinEventNoti(memberId, eventId);
+                            query = "INSERT INTO meetUpDB.dbo.JoinEvent (EventID, MemberID, AvailableTime) VALUES ('" + eventId + "', '" + memberId + "', '" + availableTime + "');";
+                            result = await sql.query(query);
+                            if (result.rowsAffected > 0) {
+                                res.send("Success");
+                                if (isToSendNoti) {
+                                    SendJoinEventNoti(memberId, eventId);
+                                }
+                            } else {
+                                res.status(500).send("Fail to join event with eventId =" + eventId + ", memberId  = " + memberId);
                             }
                         } else {
-                            res.status(500).send("Fail to join event with eventId =" + eventId + ", memberId  = " + memberId);
+                            res.status(500).send("Fail to update event AvailableTime with eventId =" + eventId + ", availableTime  = " + availableTime);
                         }
-                    } else {
-                        res.status(500).send("Fail to update event AvailableTime with eventId =" + eventId + ", availableTime  = " + availableTime);
+                    }
+                    else
+                    {
+                        res.status(400).send("Fail to find mutual available time");
                     }
                 } else {
                     res.status(400).send("Exceed max participants limit.");
@@ -430,19 +438,50 @@ app.post('/QuitEvent', async function (req, res) {
     var joinId = req.body['joinId'];
     var eventId = req.body['eventId'];
 
-    if (!joinId || !eventId) {
+    if (!joinId || !eventId)
+    {
         res.status(400).send("Please specify all fields.");
     } else {
         try {
             var result = await sql.query("Update JoinEvent Set IsQuit = 1 Where JoinID = '" + joinId + "'");
-            if (result.rowsAffected > 0) {
+            if (result.rowsAffected > 0)
+            {
                 // Update event availableTime
                 var query = "Select AvailableTime From JoinEvent Where EventID = '" + eventId + "' And IsQuit = 0";
+                var mutualTimeslot = "";
                 result = await sql.query(query);
-                if (result.recordset.length > 1) {
-                    res.send("Success");
+                if (result.recordset.length > 0)
+                {
+                    mutualTimeslot = result.recordset[0].AvailableTime;
+                    if (result.recordset.length > 1)
+                    {
+                        for (i = 1; i < result.recordset.length; i++)
+                        {
+                            mutualTimeslot = GetMutualAvailableTimeSlot(mutualTimeslot, result.recordset[i].AvailableTime)
+                        }
+                    }
+                    if (typeof(mutualTimeslot) == "object")
+                    {
+                        mutualTimeslot = JSON.stringify(mutualTimeslot);
+                    }
+                    query = "Update Event Set AvailableTime = '" + mutualTimeslot + "' Where EventID = '" + eventId + "'";
+                    result = sql.query(query);
+                    if (result.rowsAffected > 0)
+                    {
+                        res.send("Success");
+                    }
+                    else
+                    {
+                        res.status(500).send("Fail to update event AvailableTime for eventId = " + eventId);
+                    }
                 }
-            } else {
+                else
+                {
+                    res.status(500).send("Fail to find the mutual available time for eventId = " + eventId);
+                }
+            }
+            else
+            {
                 res.status(400).send("Fail to quit group for joinId = " + joinId);
             }
         } catch (err) {
@@ -595,8 +634,14 @@ app.get('/GenerateRecommendation', async function (req, res) {
 /********** Utility Start **********/
 function GetMutualAvailableTimeSlot(availableTime1, availableTime2) {
     var mutualTime = {};
-    availableTime1 = JSON.parse(availableTime1);
-    availableTime2 = JSON.parse(availableTime2);
+    if (typeof(availableTime1) == "string")
+    {
+        availableTime1 = JSON.parse(availableTime1);
+    }
+    if (typeof(availableTime2) == "string")
+    {
+        availableTime2 = JSON.parse(availableTime2);
+    }
 
     if (availableTime1.mon && availableTime2.mon)
     {
