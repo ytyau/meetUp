@@ -236,7 +236,7 @@ app.get('/GetEvent', async function (req, res) {
             {
                 selectItem = "Event.EventID, Event.AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
                 fromTable = "Event, JoinEvent";
-                condition = "Event.EventID = '" + eventId + "' And JoinEvent.MemberID = '" + memberId + "'";
+                condition = "Event.EventID = '" + eventId + "' And JoinEvent.MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID";
             }
             else if (memberId)
             {
