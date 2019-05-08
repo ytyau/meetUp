@@ -486,7 +486,8 @@ app.post('/QuitEvent', async function (req, res) {
                 }
                 else
                 {
-                    res.status(500).send("Fail to find the mutual available time for eventId = " + eventId);
+                    // No one in this group
+                    res.send("Success");
                 }
             }
             else
@@ -600,7 +601,7 @@ async function SendNoti(memberId, title, content, courseRecommendation) {
         {
             query = "INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')";
         }
-        var result = await sql.query("INSERT INTO Notification (MemberID, NotiTitle, NotiContent) Values ('" + memberId + "', '" + title + "', '" + content + "')");
+        var result = await sql.query(query);
         if (result.rowsAffected <= 0) {
             console.log("Inserted Notification but no rows affected");
         }
@@ -638,14 +639,15 @@ function SendMail(toMail, subject, content) {
 /********** Generate Recommendation Start **********/
 app.get('/GenerateRecommendation', async function (req, res) {
     try {
-        var memberToBeHandled = await sql.query("Select JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration From Event, JoinEvent Where JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
+        var memberToBeHandled = await sql.query("Select JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration, Event.Title From Event, JoinEvent Where Event.EventID = JoinEvent.EventID And JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
         if (memberToBeHandled.recordset.length > 0)
         {
             for (var i = 0; i < memberToBeHandled.recordset.length; i++)
             {
-                await GenSuggestionForMember(memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].repeatBy, memberToBeHandled.recordset[i].Duration);
+                await GenSuggestionForMember(memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].RepeatBy, memberToBeHandled.recordset[i].Duration, memberToBeHandled.recordset[i].Title);
             }
         }
+        res.send("Finished");
     } catch (err) {
         console.log('Error occurred in GenerateRecommendation');
         console.dir(err);
@@ -653,52 +655,85 @@ app.get('/GenerateRecommendation', async function (req, res) {
     }
 });
 
-async function GenSuggestionForMember(memberId, currentEventId, availableTime, course, level, location, repeatBy, duration)
+async function GenSuggestionForMember(memberId, currentEventId, availableTime, course, level, location, repeatBy, duration, title)
 {
     try
     {
+        console.log('Getting suggestion for memberId = ' + memberId + ", currentEventId = " + currentEventId);
         if (typeof(availableTime) != "obejct")
         {
             availableTime = JSON.parse(availableTime);
         }
         var query = "Select * From Event Where EventID <> '" + currentEventId + "' And Course = '" + course + "' And Level = '" + level + "' And Location = '" + location + "' And RepeatBy = '" + repeatBy + "'";
         var similarCourse = await sql.query(query);
+        console.log(query);
         if (similarCourse.recordset.length > 0)
         {
+            console.log('length of similarCourse is ' + similarCourse.recordset.length);
             var courseRecommendation = [];
             for (var i = 0; i < similarCourse.recordset.length; i++)
             {
                 var diff = TimeDiffInMin(duration, similarCourse.recordset[i].Duration);
                 if (diff <= 30) // Class duration diff within 30 minutes
                 {
+                    console.log('For similarCourse[' + i + "], duration diff = " + diff + " <= 30");
                     // Check availableTime
                     var availableTime_cpy = _.cloneDeep(availableTime);
+                    console.log('availableTime_cpy b4 add 1hour');
+                    console.dir(availableTime_cpy);
                     AvailableTimeExtend1Hour(availableTime_cpy);
+                    console.log('availableTime_cpy after add 1hour');
+                    console.dir(availableTime_cpy);
                     var mutualTimeAfterAddHour = GetMutualAvailableTimeSlot(availableTime_cpy, similarCourse.recordset[i].AvailableTime);
                     if (Object.keys(mutualTimeAfterAddHour).length > 0) // Have mutual time slot
                     {
+                        console.log('For similarCourse[' + i + "], have mutualTimeAfterAddHour");
                         var mutualTime = GetMutualAvailableTimeSlot(availableTime, similarCourse.recordset[i].AvailableTime);
                         var tmp = {};
+                        tmp.OldEventID = currentEventId;
+                        tmp.OldEventTitle = title;
                         tmp.EventID = similarCourse.recordset[i].EventID;
-                        tmp.DifferentDuration = diff == 0;
+                        tmp.EventTitle = similarCourse.recordset[i].Title;
+                        tmp.DifferentDuration = diff != 0;
                         tmp.DifferentAvailableTime = Object.keys(mutualTime).length == 0;
+                        tmp.LackMember = similarCourse.recordset[i].MinParticipant - similarCourse.recordset[i].CurrentMemberCnt
                         courseRecommendation.push(tmp);
+
+                        if (courseRecommendation.length >= 3)
+                            break;
                     }
                 }
             }
             if (courseRecommendation.length > 0)
             {
-
+                courseRecommendation.sort(compareRecommendation);
+                await SendNoti(memberId, "Seems there are some groups fit you!", "Click to check it out!", JSON.stringify(courseRecommendation));
             }
         }
+        else
+        {
+            console.log('No similar event found for memberId = ' + memberId + ", eventID = " + currentEventId);
+        }
+        return null;
     }
     catch(err)
     {
         console.log('Error occurred in GenSuggestionForMember');
         console.dir(err);
+        return null;
     }
 }
 
+function compareRecommendation( a, b )
+{
+    if ( a.LackMember < b.LackMember ){
+        return -1;
+        }
+        if ( a.LackMember > b.LackMember ){
+            return 1;
+        }
+        return 0;
+    }
 /********** Generate Recommendation End **********/
 
 /********** Utility Start **********/
@@ -829,8 +864,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.mon);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.mon = from + " - " + to;
         }
     }
@@ -839,8 +874,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.tues);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.tues = from + " - " + to;
         }
     }
@@ -849,8 +884,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.wed);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.wed = from + " - " + to;
         }
     }
@@ -859,8 +894,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.thurs);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.thurs = from + " - " + to;
         }
     }
@@ -869,8 +904,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.fri);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.fri = from + " - " + to;
         }
     }
@@ -879,8 +914,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.sat);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.sat = from + " - " + to;
         }
     }
@@ -889,8 +924,8 @@ function AvailableTimeExtend1Hour(availableTime)
         var range = GetTimeRangeObjFromStr(availableTime.sun);
         if (range)
         {
-            var from = range.from.hour == 0 ? "00:00" : range.from.hour == 23 ? "23:59" : ((range.from.hour - 1) + ":" + range.from.minute);
-            var to = range.to.hour == 0 ? "00:00" : range.to.hour == 23 ? "23:59" : ((range.to.hour - 1) + ":" + range.to.minute);
+            var from = range.from.hour == 0 ? "00:00" : ((Number(range.from.hour ) - 1) + ":" + range.from.minute);
+            var to = range.to.hour == 23 ? "23:59" : ((Number(range.to.hour) + 1) + ":" + range.to.minute);
             availableTime.sun = from + " - " + to;
         }
     }
