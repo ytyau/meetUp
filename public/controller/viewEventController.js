@@ -1,51 +1,41 @@
-app.controller('CreateGroupController', function ($scope, $location, $cookieStore, $cookies, $filter, districtList, categoryList, langClassList, instrumentClassList, academicClassList) {
+app.controller('ViewEventController', function ($scope, $http, $location, $window, $cookieStore, $cookies, $filter) {
     $scope.role = "Guest";
     const baseUrl = 'http://localhost:3000';
     const cookiesAlivePeriod = 30 * 60 * 1000; // 30 mins
     const cookies_memberInfo = "username";
     const cookies_memberId = "memberId";
+    var memberId;
+    var memberInfo;
 
     /*********** Check if Logged in Start ***********/
     if (!$cookies.get(cookies_memberInfo)) {
         $location.path("/login");
+        console.log("Please sign in")
     } else {
-        $scope.memberId = $cookies.get(cookies_memberId);
-        $scope.memberInfo = $cookies.get(cookies_memberInfo);
+        console.log("logged in");
+        memberId = $cookies.get(cookies_memberId)
+        memberInfo = JSON.parse($cookies.get(cookies_memberInfo));
+        $scope.role = memberInfo.Username;
     }
     /*********** Check if Logged in End ***********/
 
-    $scope.categorySelected = '';
-    $scope.displayCourseList = [];
-    $scope.displayLevelList = [];
-    $scope.districtList = districtList;
-    $scope.categoryList = categoryList;
-    $scope.repeatPeriod = ["Day", "Week", "2 weeks", "Month"]
+    var eventID = $location.search().id;
+    console.log(eventID);
+
+    var url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID;
+    $http.get(url).then(function (response) {
+        $scope.eventInfo = angular.copy(response.data.recordsets[0][0]);
+        $scope.eventInfo.AvailableTime = JSON.parse($scope.eventInfo.AvailableTime);
+        console.dir($scope.eventInfo);
+    })
+
+    var url = baseUrl + '/GetEventMember?eventId=' + eventID;
+    $http.get(url).then(function (response) {
+        $scope.memberInfo = angular.copy(response.data);
+        console.dir($scope.memberInfo);
+    })
+
     $scope.haveAvailability = false;
-
-    $scope.userInput = {
-        repeatBy: "",
-        durationHr: null, //TODO: validate duration
-        durationMin: null,
-        location: "",
-        minParticipant: "",
-        maxParticipant: "",
-        courseObj: null,
-        customCourse: "",
-        level: "",
-        title: "",
-        content: "",
-        availability: {
-            mon: "",
-            tues: "",
-            wed: "",
-            thurs: "",
-            fri: "",
-            sat: "",
-            sun: ""
-        }
-    }
-
-
     $scope.error = {
         availabilityMon: false,
         availabilityTues: false,
@@ -55,65 +45,11 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         availabilitySat: false,
         availabilitySun: false
     }
-
-    $scope.changeList = function () {
-        //console.log($scope.categorySelected)
-        $scope.userInput.courseObj = null;
-        switch ($scope.categorySelected) {
-            case 'Academic':
-                $scope.displayCourseList = academicClassList;
-                break;
-
-            case 'Language':
-                $scope.displayCourseList = langClassList;
-                break;
-
-            case 'Instruments':
-                $scope.displayCourseList = instrumentClassList;
-                break;
-
-            case 'Others':
-                $scope.displayCourseList = [];
-                var courseObj = {
-                    "name": $scope.userInput.customCourse,
-                    "level": [
-                        "Beginner", "Intermediate", "Advanced"
-                    ]
-                }
-                $scope.userInput.courseObj = JSON.stringify(courseObj);
-                $scope.changeLevelList();
-                break;
-
-            default:
-                $scope.displayCourseList = []
-                break;
-        }
-    }
-
-    $scope.changeLevelList = function () {
-        let obj = JSON.parse($scope.userInput.courseObj);
-        $scope.displayLevelList = obj["level"];
-        $scope.userInput.level = "";
-        //console.dir($scope.displayLevelList);
-    }
-
-    $scope.logout = function () {
-        //console.log("signout now");
-        if ($cookies.get(cookies_memberInfo)) {
-            $cookies.remove(cookies_memberInfo);
-        }
-        if ($cookies.get(cookies_memberId)) {
-            $cookies.remove(cookies_memberId);
-        }
-        $location.path("/login");
-    }
-
     $scope.availabilityChange = function () {
         //setTimeout(function () {
         var availabilityForm = document.getElementById("createGroupForm2");
         var matches;
         if (availabilityForm.availabilityMon.value) {
-            //console.log(availabilityForm.availabilityMon.value);
             matches = availabilityForm.availabilityMon.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
             if (matches.length === 5) {
                 range = {
@@ -294,7 +230,7 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
             }
         }
 
-        $scope.userInput.availability = {
+        $scope.availability = {
             mon: availabilityForm.availabilityMon && !$scope.error.availabilityMon ? availabilityForm.availabilityMon.value : null,
             tues: availabilityForm.availabilityTues && !$scope.error.availabilityTues ? availabilityForm.availabilityTues.value : null,
             wed: availabilityForm.availabilityWed && !$scope.error.availabilityWed ? availabilityForm.availabilityWed.value : null,
@@ -308,12 +244,13 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         if (hasError) {
             $scope.haveAvailability = false;
         } else {
-            if ($scope.userInput.availability.mon || $scope.userInput.availability.tues || $scope.userInput.availability.wed || $scope.userInput.availability.thurs || $scope.userInput.availability.fri || $scope.userInput.availability.sat || $scope.userInput.availability.sun) {
+            if ($scope.availability.mon || $scope.availability.tues || $scope.availability.wed || $scope.availability.thurs || $scope.availability.fri || $scope.availability.sat || $scope.availability.sun) {
                 $scope.haveAvailability = true;
             } else {
                 $scope.haveAvailability = false;
             }
         }
+        console.log($scope.haveAvailability);
     }
 
     function validateTimeRange(range) {
@@ -326,52 +263,6 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                 return false;
             }
         } else {
-            return false;
-        }
-    }
-
-    var createGroupForm = document.getElementById("createGroupForm");
-    $scope.submitForm = function () {
-        if (!$scope.createGroupForm.$valid || !$scope.haveAvailability) {
-            //empty title
-            window.alert("have error")
-        } else {
-            var finalCourse;
-            if ($scope.userInput.courseObj) {
-                finalCourse = JSON.parse($scope.userInput.courseObj).name
-            } else {
-                finalCourse = $scope.userInput.customCourse
-            }
-            var postData = {
-                duration: $scope.userInput.durationHr + ":" + $scope.userInput.durationMin + ":00",
-                memberId: $scope.memberId,
-                repeatBy: $scope.userInput.repeatBy,
-                location: $scope.userInput.location,
-                minParticipant: $scope.userInput.minParticipant,
-                maxParticipant: $scope.userInput.maxParticipant,
-                course: finalCourse,
-                level: $scope.userInput.level,
-                title: $scope.userInput.title,
-                content: $scope.userInput.content,
-                availableTime: JSON.stringify($scope.userInput.availability)
-            }
-            console.dir(postData);
-            var dest = baseUrl + '/CreateEvent';
-            $.ajax(dest, {
-                type: "POST",
-                data: postData,
-                statusCode: {
-                    200: function (response) {
-                        alert(response);
-                        $scope.$apply(function () {
-                            $location.path("/home");
-                        });
-                    }
-                },
-                error: function (err) {
-                    alert(err);
-                }
-            });
             return false;
         }
     }
@@ -541,6 +432,7 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
                         timeRange.to.hour + ":" +
                         timeRange.to.minute
                     );
+
                     timerangeContainer.remove();
                 }
             }
@@ -567,4 +459,30 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         }
     }
     /*********** Timepicker control ***********/
+
+    var createGroupForm = document.getElementById("createGroupForm2");
+    $scope.submitForm = function () {
+        if (!$scope.haveAvailability) {
+            //empty title
+            window.alert("have error")
+        } else {
+            var data = {
+                memberId: memberId,
+                eventId: eventID,
+                availableTime: JSON.stringify($scope.availability),
+                isToSendNoti: true
+            }
+            console.dir(data);
+            var dest = baseUrl + '/JoinEvent';
+            $http.get(dest, {
+                params: data
+            }).then(function (response) {
+                console.log(response.data);
+            }).catch(function (err) {
+                alert(err.data);
+            });
+            return false;
+        }
+    }
+
 })

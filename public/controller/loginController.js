@@ -40,11 +40,11 @@ app.controller('LoginController', function ($scope, $location, $cookies) {
                         });
                     },
                     202: function (response) {
-                        alert(response);
+                        alert(response.data);
                     }
                 },
                 error: function (err) {
-                    alert(err);
+                    alert(err.data);
                 }
             });
             return false;
