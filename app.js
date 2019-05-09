@@ -941,6 +941,37 @@ app.post('/Debug', async function (req, res)
     var j2 = req.body['j2'];
     res.send(GetMutualAvailableTimeSlot(j1, j2));
 });
+
+app.get('/NormaliseDb', async function (req, res)
+{
+    try
+    {
+        var query = "Select EventID, count(*) as Cnt From JoinEvent Group By EventID";
+        var result = await sql.query(query);
+        // console.dir(result);
+        if (result.recordset.length > 0)
+        {
+            var totalLoop = result.recordset.length;
+            for (var i = 0; i < totalLoop; i++)
+            {
+                query = "Update Event Set CurrentMemberCnt = " + result.recordset[0].Cnt + " Where EventID = '" + result.recordset[0].EventID + "'";
+                // console.log(query);
+                var result2 = await sql.query(query)
+                // console.dir(result);
+                if (result2.rowsAffected < 1)
+                {
+                    console.log('fail to update current member count. ' + query);
+                }
+            }
+        }
+        res.send("Done");
+    }
+    catch (err)
+    {
+        console.dir(err);
+        res.status(500).send(err);
+    }
+});
 /********** Debug End **********/
 
 /********** Website Start **********/
