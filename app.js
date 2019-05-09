@@ -591,10 +591,11 @@ app.get('/ReadNotification', async function (req, res) {
 
 /********** Send Notification Stat **********/
 async function SendNoti(memberId, title, content, courseRecommendation) {
+    var query = "";
     try {
-        var query = "";
         if (courseRecommendation)
         {
+            courseRecommendation = courseRecommendation.replace("'", "''");
             query = "INSERT INTO Notification (MemberID, NotiTitle, NotiContent, CourseRecommendation) Values ('" + memberId + "', '" + title + "', '" + content + "', '" + courseRecommendation + "')";
         }
         else
@@ -606,6 +607,7 @@ async function SendNoti(memberId, title, content, courseRecommendation) {
             console.log("Inserted Notification but no rows affected");
         }
     } catch (err) {
+        console.log(query);
         console.dir(err);
     }
 }
