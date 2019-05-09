@@ -234,13 +234,13 @@ app.get('/GetEvent', async function (req, res) {
             }
             else if (memberId && eventId)
             {
-                selectItem = "Event.EventID, Event.AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
+                selectItem = "Event.EventID, Event.AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt, Duration";
                 fromTable = "Event, JoinEvent";
                 condition = "Event.EventID = '" + eventId + "' And JoinEvent.MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID";
             }
             else if (memberId)
             {
-                selectItem = "Event.EventID, Event.AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt";
+                selectItem = "Event.EventID, Event.AvailableTime, RepeatBy, Location, MinParticipant, MaxParticipant, CurrentMemberCnt, Level, Title, Content, PickedUpBy, EventCreatedAt, Course, IsClosed, JoinID, IsQuit, JoinedAt, Duration";
                 fromTable = "Event, JoinEvent";
                 condition = "MemberID = '" + memberId + "' And Event.EventID = JoinEvent.EventID And IsQuit = 0";
                 orderBy = " Order By JoinEvent.JoinedAt DESC Offset " + offset + " Rows Fetch Next " + top + " Rows Only";
