@@ -34,10 +34,10 @@
                     (Needed:
                     {{eventInfo.MinParticipant-eventInfo.CurrentMemberCnt > 0? eventInfo.MinParticipant-eventInfo.CurrentMemberCnt : 0}})
                 </p>
-                <p><i class="fas fa-clock m-1"></i>{{eventInfo.Duration | date: 'HH'}} Hour
+                <p><i class="fas fa-clock m-1"></i>{{eventInfo.Duration | date: 'hh' : '+0000'}} Hour
                     {{eventInfo.Duration | date: 'MM'}} Minutes (every {{eventInfo.RepeatBy}})</p>
                 <p><i class="fas fa-calendar-plus m-1"></i>Created At:
-                    {{eventInfo.EventCreatedAt | date: "dd/MM/yyyy HH:mm"}}
+                    {{eventInfo.EventCreatedAt | date: "dd/MM/yyyy hh:mm"}}
                 </p>
                 <p><i class="fas fa-calendar-check m-1"></i>Available Time:
                     <p ng-if="eventInfo.AvailableTime.mon && eventInfo.AvailableTime.mon.length>0" class="ml-4">Mon:
@@ -86,7 +86,7 @@
                     <div class="border-bottom mt-3" ng-repeat="comment in commentThread">
                         <h6>{{comment.Username? comment.Username: 'Admin'}}<br>
                             <span class="font-weight-light"
-                                style="font-size: 80%">{{comment.DiscussionCreatedAt| date: "dd/MM/yyyy HH:mm"}}</span>
+                                style="font-size: 80%">{{comment.DiscussionCreatedAt| date: "dd/MM/yyyy hh:mm"}}</span>
                         </h6>
                         <p>{{comment.DiscussContent}}</p>
                     </div>

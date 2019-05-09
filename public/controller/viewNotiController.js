@@ -19,6 +19,17 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
         $scope.role = memberInfo.Username
     }
     /*********** Check if Logged in End ***********/
+    $scope.logout = function () {
+        //console.log("signout now");
+        if ($cookies.get(cookies_memberInfo)) {
+            $cookies.remove(cookies_memberInfo);
+        }
+        if ($cookies.get(cookies_memberId)) {
+            $cookies.remove(cookies_memberId);
+        }
+        $location.path("/login");
+    }
+
     $scope.newNotification;
     getNoti.pullNoti(memberId).then(function (res) {
         $scope.allNotification = angular.copy(res.data);
@@ -29,7 +40,7 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
             }
             return a
         })
-        console.dir($scope.newNotification);
+        console.dir($scope.allNotification);
     }).catch(function (err) {
         console.log(err)
     })
