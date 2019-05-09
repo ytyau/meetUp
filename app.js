@@ -946,15 +946,22 @@ app.get('/NormaliseDb', async function (req, res)
 {
     try
     {
-        var query = "Select EventID, count(*) as Cnt From JoinEvent Group By EventID";
+        var query = "Select EventID, count(*) as Cnt From JoinEvent Where IsQuit = 0 Group By EventID";
         var result = await sql.query(query);
         // console.dir(result);
         if (result.recordset.length > 0)
         {
+            // console.log('record cnt = ' + result.recordset.length);
+
+            // Reset membe cnt
+            query = "Update Event Set CurrentMemberCnt = 0";
+            var result3 = await sql.query(query);
+
             var totalLoop = result.recordset.length;
             for (var i = 0; i < totalLoop; i++)
             {
-                query = "Update Event Set CurrentMemberCnt = " + result.recordset[0].Cnt + " Where EventID = '" + result.recordset[0].EventID + "'";
+                // console.log('record cnt = ' + totalLoop);
+                query = "Update Event Set CurrentMemberCnt = " + result.recordset[i].Cnt + " Where EventID = '" + result.recordset[i].EventID + "'";
                 // console.log(query);
                 var result2 = await sql.query(query)
                 // console.dir(result);
