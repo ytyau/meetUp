@@ -666,7 +666,7 @@ async function GenSuggestionForMember(memberId, currentEventId, availableTime, c
         {
             availableTime = JSON.parse(availableTime);
         }
-        var query = "Select * From Event Where EventID <> '" + currentEventId + "' And Course = '" + course + "' And Level = '" + level + "' And Location = '" + location + "' And RepeatBy = '" + repeatBy + "'";
+        var query = "Select * From Event Where Event.IsClosed = 0 And EventID <> '" + currentEventId + "' And Course = '" + course + "' And Level = '" + level + "' And Location = '" + location + "' And RepeatBy = '" + repeatBy + "'";
         var similarCourse = await sql.query(query);
         console.log(query);
         if (similarCourse.recordset.length > 0)
