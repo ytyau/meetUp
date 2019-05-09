@@ -43,7 +43,7 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
                 }
                 return a
             })
-            console.dir($scope.newNotification);
+            //console.dir($scope.newNotification);
         }).catch(function (err) {
             console.log(err)
         })
@@ -56,7 +56,7 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
                 notificationId: NotificationID
             }
         }).then(function (res) {
-            alert(res.data)
+            //alert(res.data)
             location.reload();
         }).catch(function (err) {
             console.log(err);

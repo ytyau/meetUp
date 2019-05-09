@@ -46,25 +46,37 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
         })
     }, 3000);
 
-    var url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID + '&memberId=' + memberId;
-    $http.get(url).then(function (response) {
-        $scope.eventInfo = angular.copy(response.data.recordsets[0][0]);
-        //console.dir($scope.eventInfo);
-        if ($scope.eventInfo.AvailableTime) {
-            $scope.eventInfo.AvailableTime = JSON.parse($scope.eventInfo.AvailableTime);
-        }
-        console.dir($scope.eventInfo);
-    })
-
     $scope.inGroup = [];
+    var url;
     var url2 = baseUrl + '/GetEventMember?eventId=' + eventID;
     $http.get(url2).then(function (response) {
         $scope.memberInfo = angular.copy(response.data);
         console.dir($scope.memberInfo);
-        $scope.inGroup = $scope.memberInfo.filter((a) =>
+        $scope.inGroup = $scope.memberInfo.filter(a =>
             a.MemberID == memberId
         )
         console.dir($scope.inGroup);
+        if ($scope.inGroup.length > 0) {
+            url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID + '&memberId=' + memberId;
+            $http.get(url).then(function (response) {
+                $scope.eventInfo = angular.copy(response.data.recordsets[0][0]);
+                //console.dir($scope.eventInfo);
+                if ($scope.eventInfo.AvailableTime) {
+                    $scope.eventInfo.AvailableTime = JSON.parse($scope.eventInfo.AvailableTime);
+                }
+                console.dir($scope.eventInfo);
+            })
+        } else {
+            url = baseUrl + '/GetEvent?top=1&offset=0&eventId=' + eventID;
+            $http.get(url).then(function (response) {
+                $scope.eventInfo = angular.copy(response.data.recordsets[0][0]);
+                //console.dir($scope.eventInfo);
+                if ($scope.eventInfo.AvailableTime) {
+                    $scope.eventInfo.AvailableTime = JSON.parse($scope.eventInfo.AvailableTime);
+                }
+                console.dir($scope.eventInfo);
+            })
+        }
     })
 
     var url3 = baseUrl + '/GetDiscussion';
@@ -93,7 +105,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
         //setTimeout(function () {
         var availabilityForm = document.getElementById("createGroupForm2");
         var matches;
-        if (availabilityForm.availabilityMon.value) {
+        /*if (availabilityForm.availabilityMon.value) {
             matches = availabilityForm.availabilityMon.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
             if (matches.length === 5) {
                 range = {
@@ -272,16 +284,16 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
                     //console.log("correct")
                 }
             }
-        }
+        }*/
 
         $scope.availability = {
-            mon: availabilityForm.availabilityMon && !$scope.error.availabilityMon ? availabilityForm.availabilityMon.value : null,
-            tues: availabilityForm.availabilityTues && !$scope.error.availabilityTues ? availabilityForm.availabilityTues.value : null,
-            wed: availabilityForm.availabilityWed && !$scope.error.availabilityWed ? availabilityForm.availabilityWed.value : null,
-            thurs: availabilityForm.availabilityThurs && !$scope.error.availabilityThurs ? availabilityForm.availabilityThurs.value : null,
-            fri: availabilityForm.availabilityFri && !$scope.error.availabilityFri ? availabilityForm.availabilityFri.value : null,
-            sat: availabilityForm.availabilitySat && !$scope.error.availabilitySat ? availabilityForm.availabilitySat.value : null,
-            sun: availabilityForm.availabilitySun && !$scope.error.availabilitySun ? availabilityForm.availabilitySun.value : null
+            mon: availabilityForm.availabilityMon ? availabilityForm.availabilityMon.value : null,
+            tues: availabilityForm.availabilityTues ? availabilityForm.availabilityTues.value : null,
+            wed: availabilityForm.availabilityWed ? availabilityForm.availabilityWed.value : null,
+            thurs: availabilityForm.availabilityThurs ? availabilityForm.availabilityThurs.value : null,
+            fri: availabilityForm.availabilityFri ? availabilityForm.availabilityFri.value : null,
+            sat: availabilityForm.availabilitySat ? availabilityForm.availabilitySat.value : null,
+            sun: availabilityForm.availabilitySun ? availabilityForm.availabilitySun.value : null
         }
         var hasError = $scope.error.availabilityMon || $scope.error.availabilityTues || $scope.error.availabilityWed || $scope.error.availabilityThurs || $scope.error.availabilityFri || $scope.error.availabilitySat || $scope.error.availabilitySun;
         console.dir($scope.error);
@@ -506,29 +518,28 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
 
     var createGroupForm = document.getElementById("createGroupForm2");
     $scope.submitForm = function () {
-        if (!$scope.haveAvailability) {
-            //empty title
-            window.alert("have error")
-        } else {
+        if (quitEventID) {
             $scope.quitGroup(quitEventID);
-            var data = {
-                memberId: memberId,
-                eventId: eventID,
-                availableTime: JSON.stringify($scope.availability),
-                isToSendNoti: true
-            }
-            console.dir(data);
-            var dest = baseUrl + '/JoinEvent';
-            $http.get(dest, {
-                params: data
-            }).then(function (response) {
-                console.log(response.data);
-            }).catch(function (err) {
-                alert(err.data);
-            });
-            return false;
         }
+        var data = {
+            memberId: memberId,
+            eventId: eventID,
+            availableTime: JSON.stringify($scope.availability),
+            isToSendNoti: true
+        }
+        console.dir(data);
+        var dest = baseUrl + '/JoinEvent';
+        $http.get(dest, {
+            params: data
+        }).then(function (response) {
+            console.log(response.data);
+            alert(response.data)
+        }).catch(function (err) {
+            alert(err.data);
+        });
+        return false;
     }
+
 
     $scope.quitGroup = function (id) {
         var dest = baseUrl + '/QuitEvent';
@@ -542,7 +553,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
             data: postData,
             statusCode: {
                 200: function (response) {
-                    alert(response.data);
+                    alert(response);
                     location.reload();
                 }
             },

@@ -53,11 +53,13 @@ app.controller('LoginController', function ($scope, $location, $http, $cookies) 
                         });
                     },
                     202: function (response) {
-                        alert(response.data);
+                        alert(response);
+                        console.log(response)
                     }
                 },
                 error: function (err) {
-                    alert(err.data);
+                    alert(err.responseText);
+                    console.log(err.responseText)
                 }
             });
             return false;
