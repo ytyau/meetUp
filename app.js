@@ -641,12 +641,12 @@ function SendMail(toMail, subject, content) {
 /********** Generate Recommendation Start **********/
 app.get('/GenerateRecommendation', async function (req, res) {
     try {
-        var memberToBeHandled = await sql.query("Select JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration, Event.Title From Event, JoinEvent Where Event.EventID = JoinEvent.EventID And JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
+        var memberToBeHandled = await sql.query("Select JoinEvent.JoinID, JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration, Event.Title From Event, JoinEvent Where Event.EventID = JoinEvent.EventID And JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
         if (memberToBeHandled.recordset.length > 0)
         {
             for (var i = 0; i < memberToBeHandled.recordset.length; i++)
             {
-                await GenSuggestionForMember(memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].RepeatBy, memberToBeHandled.recordset[i].Duration, memberToBeHandled.recordset[i].Title);
+                await GenSuggestionForMember(memberToBeHandled.recordset[i].JoinID, memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].RepeatBy, memberToBeHandled.recordset[i].Duration, memberToBeHandled.recordset[i].Title);
             }
         }
         res.send("Finished");
@@ -657,7 +657,7 @@ app.get('/GenerateRecommendation', async function (req, res) {
     }
 });
 
-async function GenSuggestionForMember(memberId, currentEventId, availableTime, course, level, location, repeatBy, duration, title)
+async function GenSuggestionForMember(joinId, memberId, currentEventId, availableTime, course, level, location, repeatBy, duration, title)
 {
     try
     {
@@ -692,6 +692,7 @@ async function GenSuggestionForMember(memberId, currentEventId, availableTime, c
                         console.log('For similarCourse[' + i + "], have mutualTimeAfterAddHour");
                         var mutualTime = GetMutualAvailableTimeSlot(availableTime, similarCourse.recordset[i].AvailableTime);
                         var tmp = {};
+                        tmp.JoinID = joinId;
                         tmp.OldEventID = currentEventId;
                         tmp.OldEventTitle = title;
                         tmp.EventID = similarCourse.recordset[i].EventID;
