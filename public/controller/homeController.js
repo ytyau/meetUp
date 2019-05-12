@@ -67,4 +67,8 @@ app.controller('HomeController', function ($scope, $http, $location, $window, $c
             id: event.EventID
         });
     }
+
+    $scope.$on("$destroy", function () {
+        clearInterval(interval);
+    });
 });

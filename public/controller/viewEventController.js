@@ -594,4 +594,8 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
             }
         });
     }
+
+    $scope.$on("$destroy", function () {
+        clearInterval(interval);
+    });
 })

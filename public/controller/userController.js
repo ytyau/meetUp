@@ -66,4 +66,8 @@ app.controller('UserController', function ($scope, $http, $location, $window, $c
             id: event.EventID
         });
     }
+
+    $scope.$on("$destroy", function () {
+        clearInterval(interval);
+    });
 });

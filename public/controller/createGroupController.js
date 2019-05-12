@@ -610,4 +610,8 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         }
     }
     /*********** Timepicker control ***********/
+
+    $scope.$on("$destroy", function(){
+        clearInterval(interval);
+    });
 })

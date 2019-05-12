@@ -93,4 +93,8 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
             oldJoin: oldjoinID
         });
     }
+
+    $scope.$on("$destroy", function () {
+        clearInterval(interval);
+    });
 });
