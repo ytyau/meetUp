@@ -131,9 +131,10 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         //setTimeout(function () {
         var availabilityForm = document.getElementById("createGroupForm2");
         var matches;
-        if (availabilityForm.availabilityMon.value) {
-            //console.log(availabilityForm.availabilityMon.value);
-            matches = availabilityForm.availabilityMon.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+
+        /*if (availabilityForm.availabilityMon.value) {
+                    //console.log(availabilityForm.availabilityMon.value);
+                    matches = availabilityForm.availabilityMon.value.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
             if (matches.length === 5) {
                 range = {
                     from: {
@@ -332,28 +333,30 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         } else {
             $scope.createGroupForm2.availabilitySun.$invalid = true;
             $scope.error.availabilitySun = true;
-        }
-
-        $scope.userInput.availability = {
-            mon: availabilityForm.availabilityMon && !$scope.error.availabilityMon ? availabilityForm.availabilityMon.value : null,
-            tues: availabilityForm.availabilityTues && !$scope.error.availabilityTues ? availabilityForm.availabilityTues.value : null,
-            wed: availabilityForm.availabilityWed && !$scope.error.availabilityWed ? availabilityForm.availabilityWed.value : null,
-            thurs: availabilityForm.availabilityThurs && !$scope.error.availabilityThurs ? availabilityForm.availabilityThurs.value : null,
-            fri: availabilityForm.availabilityFri && !$scope.error.availabilityFri ? availabilityForm.availabilityFri.value : null,
-            sat: availabilityForm.availabilitySat && !$scope.error.availabilitySat ? availabilityForm.availabilitySat.value : null,
-            sun: availabilityForm.availabilitySun && !$scope.error.availabilitySun ? availabilityForm.availabilitySun.value : null
-        }
-        var hasError = $scope.error.availabilityMon || $scope.error.availabilityTues || $scope.error.availabilityWed || $scope.error.availabilityThurs || $scope.error.availabilityFri || $scope.error.availabilitySat || $scope.error.availabilitySun;
-        console.dir($scope.error);
-        if (hasError) {
-            $scope.haveAvailability = false;
-        } else {
-            if ($scope.userInput.availability.mon || $scope.userInput.availability.tues || $scope.userInput.availability.wed || $scope.userInput.availability.thurs || $scope.userInput.availability.fri || $scope.userInput.availability.sat || $scope.userInput.availability.sun) {
-                $scope.haveAvailability = true;
-            } else {
-                $scope.haveAvailability = false;
+        }*/
+        setTimeout(function () {
+            $scope.userInput.availability = {
+                mon: availabilityForm.availabilityMon.value ? availabilityForm.availabilityMon.value : null,
+                tues: availabilityForm.availabilityTues.value ? availabilityForm.availabilityTues.value : null,
+                wed: availabilityForm.availabilityWed.value ? availabilityForm.availabilityWed.value : null,
+                thurs: availabilityForm.availabilityThurs.value ? availabilityForm.availabilityThurs.value : null,
+                fri: availabilityForm.availabilityFri.value ? availabilityForm.availabilityFri.value : null,
+                sat: availabilityForm.availabilitySat.value ? availabilityForm.availabilitySat.value : null,
+                sun: availabilityForm.availabilitySun.value ? availabilityForm.availabilitySun.value : null
             }
-        }
+            var hasError = $scope.error.availabilityMon || $scope.error.availabilityTues || $scope.error.availabilityWed || $scope.error.availabilityThurs || $scope.error.availabilityFri || $scope.error.availabilitySat || $scope.error.availabilitySun;
+            console.dir($scope.error);
+            console.dir($scope.userInput.availability);
+            if (hasError) {
+                $scope.haveAvailability = false;
+            } else {
+                if ($scope.userInput.availability.mon || $scope.userInput.availability.tues || $scope.userInput.availability.wed || $scope.userInput.availability.thurs || $scope.userInput.availability.fri || $scope.userInput.availability.sat || $scope.userInput.availability.sun) {
+                    $scope.haveAvailability = true;
+                } else {
+                    $scope.haveAvailability = false;
+                }
+            }
+        }, 200)
     }
 
     function validateTimeRange(range) {
