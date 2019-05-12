@@ -1,0 +1,9 @@
+{
+    "dbHost": "The hostname of your database, it should be a Microsoft SQL Server",
+    "dbPort": "It should be an integer specifying the database port that you use",
+    "dbAcc": "The account name of the database",
+    "dbPwd": "The password of the database",
+    "dbName": "The databae name",
+    "fromGmail": "The Gmail account to send out registration and notification mail. You must allow less secure apps to access your Gmail account. See https://support.google.com/accounts/answer/6010255?hl=zh-Hant",
+    "gmailPwd": "The password of gmail"
+}
