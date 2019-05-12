@@ -18,7 +18,7 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
 
     $scope.newNotification;
     let interval = setInterval(function () {
-        getNoti.pullNoti(memberId).then(function (res) {
+        getNoti.pullNoti($scope.memberId).then(function (res) {
             var notification = angular.copy(res.data);
             $scope.newNotification = notification.filter(a => a.IsRead == false)
             //console.log($scope.newNotification);

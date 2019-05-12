@@ -25,218 +25,225 @@
             {{eventInfo.Course}}
             /
             {{eventInfo.Level}}</h4>
-        <div class="card mt-3 mb-3" ng-if="eventInfo">
-            <div class="card-header">Group details</div>
-            <div class="card-body">
-                <p><i class="fas fa-map-marker-alt m-1"></i>Location: {{eventInfo.Location}}</p>
-                <p><i class="fas fa-user-alt m-1"></i>Current number of member: {{eventInfo.CurrentMemberCnt}} out of
-                    {{eventInfo.MaxParticipant}}
-                    (Needed:
-                    {{eventInfo.MinParticipant-eventInfo.CurrentMemberCnt > 0? eventInfo.MinParticipant-eventInfo.CurrentMemberCnt : 0}})
-                </p>
-                <p><i class="fas fa-clock m-1"></i>{{eventInfo.Duration | date: 'hh' : '+0000'}} Hour
-                    {{eventInfo.Duration | date: 'MM'}} Minutes (every {{eventInfo.RepeatBy}})</p>
-                <p><i class="fas fa-calendar-plus m-1"></i>Created At:
-                    {{eventInfo.EventCreatedAt | date: "dd/MM/yyyy hh:mm"}}
-                </p>
-                <p><i class="fas fa-calendar-check m-1"></i>Available Time:
-                    <p ng-if="eventInfo.AvailableTime.mon && eventInfo.AvailableTime.mon.length>0" class="ml-4">Mon:
-                        {{eventInfo.AvailableTime.mon}}
+        <div ng-if="!eventInfo.IsClosed">
+            <div class="card mt-3 mb-3" ng-if="eventInfo">
+                <div class="card-header">Group details</div>
+                <div class="card-body">
+                    <p><i class="fas fa-map-marker-alt m-1"></i>Location: {{eventInfo.Location}}</p>
+                    <p><i class="fas fa-user-alt m-1"></i>Current number of member: {{eventInfo.CurrentMemberCnt}} out
+                        of
+                        {{eventInfo.MaxParticipant}}
+                        (Needed:
+                        {{eventInfo.MinParticipant-eventInfo.CurrentMemberCnt > 0? eventInfo.MinParticipant-eventInfo.CurrentMemberCnt : 0}})
                     </p>
-                    <p ng-if="eventInfo.AvailableTime.tues && eventInfo.AvailableTime.tues.length>0" class="ml-4">Tues:
-                        {{eventInfo.AvailableTime.tues}}
+                    <p><i class="fas fa-clock m-1"></i>{{eventInfo.Duration | date: 'hh' : '+0000'}} Hour
+                        {{eventInfo.Duration | date: 'MM'}} Minutes (every {{eventInfo.RepeatBy}})</p>
+                    <p><i class="fas fa-calendar-plus m-1"></i>Created At:
+                        {{eventInfo.EventCreatedAt | date: "dd/MM/yyyy hh:mm"}}
                     </p>
-                    <p ng-if="eventInfo.AvailableTime.wed &&eventInfo.AvailableTime.wed.length>0" class="ml-4">Wed:
-                        {{eventInfo.AvailableTime.wed}}
+                    <p><i class="fas fa-calendar-check m-1"></i>Available Time:
+                        <p ng-if="eventInfo.AvailableTime.mon && eventInfo.AvailableTime.mon.length>0" class="ml-4">Mon:
+                            {{eventInfo.AvailableTime.mon}}
+                        </p>
+                        <p ng-if="eventInfo.AvailableTime.tues && eventInfo.AvailableTime.tues.length>0" class="ml-4">
+                            Tues:
+                            {{eventInfo.AvailableTime.tues}}
+                        </p>
+                        <p ng-if="eventInfo.AvailableTime.wed &&eventInfo.AvailableTime.wed.length>0" class="ml-4">Wed:
+                            {{eventInfo.AvailableTime.wed}}
+                        </p>
+                        <p ng-if="eventInfo.AvailableTime.thurs &&eventInfo.AvailableTime.thurs.length>0" class="ml-4">
+                            Thurs:
+                            {{eventInfo.AvailableTime.thurs}}</p>
+                        <p ng-if="eventInfo.AvailableTime.fri && eventInfo.AvailableTime.fri.length>0" class="ml-4">Fri:
+                            {{eventInfo.AvailableTime.fri}}
+                        </p>
+                        <p ng-if="eventInfo.AvailableTime.sat && eventInfo.AvailableTime.sat.length>0" class="ml-4">Sat:
+                            {{eventInfo.AvailableTime.sat}}
+                        </p>
+                        <p ng-if="eventInfo.AvailableTime.sun && eventInfo.AvailableTime.sun.length>0" class="ml-4">Sun:
+                            {{eventInfo.AvailableTime.sun}}
+                        </p>
                     </p>
-                    <p ng-if="eventInfo.AvailableTime.thurs &&eventInfo.AvailableTime.thurs.length>0" class="ml-4">
-                        Thurs:
-                        {{eventInfo.AvailableTime.thurs}}</p>
-                    <p ng-if="eventInfo.AvailableTime.fri && eventInfo.AvailableTime.fri.length>0" class="ml-4">Fri:
-                        {{eventInfo.AvailableTime.fri}}
-                    </p>
-                    <p ng-if="eventInfo.AvailableTime.sat && eventInfo.AvailableTime.sat.length>0" class="ml-4">Sat:
-                        {{eventInfo.AvailableTime.sat}}
-                    </p>
-                    <p ng-if="eventInfo.AvailableTime.sun && eventInfo.AvailableTime.sun.length>0" class="ml-4">Sun:
-                        {{eventInfo.AvailableTime.sun}}
-                    </p>
-                </p>
-                <div class="border-top">
-                    <p class="mt-4">{{eventInfo.Content}}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-3" ng-if="memberInfo">
-            <div class="card-header">Group members</div>
-            <div class="card-body">
-                <div ng-repeat="member in memberInfo" ng-class="member.Gender=='F'? 'female' : 'male'">
-                    <i class="fas fa-user-alt m-1"></i> {{member.Username}} (aged {{member.Age}})
-                </div>
-                <button class="btn btn-dark btn-block mt-4 " ng-click="quitGroup()" type="button" style="color: white"
-                    ng-if="!inGroup.length==0">Quit Group</button>
-            </div>
-        </div>
-        <div class="card mb-3" ng-if="inGroup.length>0">
-            <div class="card-header">Discussion</div>
-            <div class="card-body">
-                <div ng-if="!commentThread" class="text-center mb-3">No comments yet. Leave yours!</div>
-                <div ng-if="commentThread">
-                    <div class="border-bottom mt-3" ng-repeat="comment in commentThread">
-                        <h6>{{comment.Username? comment.Username: 'Admin'}}<br>
-                            <span class="font-weight-light"
-                                style="font-size: 80%">{{comment.DiscussionCreatedAt| date: "dd/MM/yyyy hh:mm"}}</span>
-                        </h6>
-                        <p>{{comment.DiscussContent}}</p>
+                    <div class="border-top">
+                        <p class="mt-4">{{eventInfo.Content}}</p>
                     </div>
                 </div>
-                <div>
-                    <form class="mt-4" novalidate>
-                        <div class="form-row align-items-center">
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" ng-model="input.newComments">
+            </div>
+
+            <div class="card mb-3" ng-if="memberInfo">
+                <div class="card-header">Group members</div>
+                <div class="card-body">
+                    <div ng-repeat="member in memberInfo" ng-class="member.Gender=='F'? 'female' : 'male'">
+                        <i class="fas fa-user-alt m-1"></i> {{member.Username}} (aged {{member.Age}})
+                    </div>
+                    <button class="btn btn-dark btn-block mt-4 " ng-click="quitGroup()" type="button"
+                        style="color: white" ng-if="!inGroup.length==0">Quit Group</button>
+                </div>
+            </div>
+            <div class="card mb-3" ng-if="inGroup.length>0">
+                <div class="card-header">Discussion</div>
+                <div class="card-body">
+                    <div ng-if="!commentThread" class="text-center mb-3">No comments yet. Leave yours!</div>
+                    <div ng-if="commentThread">
+                        <div class="border-bottom mt-3" ng-repeat="comment in commentThread">
+                            <h6>{{comment.Username? comment.Username: 'Admin'}}<br>
+                                <span class="font-weight-light"
+                                    style="font-size: 80%">{{comment.DiscussionCreatedAt| date: "dd/MM/yyyy hh:mm"}}</span>
+                            </h6>
+                            <p>{{comment.DiscussContent}}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <form class="mt-4" novalidate>
+                            <div class="form-row align-items-center">
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" ng-model="input.newComments">
+                                </div>
+                                <div class="col-sm-2">
+                                    <button class="btn btn-dark btn-block" ng-click="submitComment()" type="button"
+                                        style="color: white" ng-disabled="newComments.length==0">Submit</button>
+                                </div>
                             </div>
-                            <div class="col-sm-2">
-                                <button class="btn btn-dark btn-block" ng-click="submitComment()" type="button"
-                                    style="color: white" ng-disabled="newComments.length==0">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3" ng-if="inGroup.length==0">
+                <div class="card-header">Join event</div>
+                <div class="card-body">
+                    <p>Please state your best availability for each weekday. Leave it blank if you are not
+                        available the
+                        whole day.</p>
+                    <form id="createGroupForm2" name="createGroupForm2" novalidate>
+                        <div class="form-group row">
+                            <label for="availabilityMon" class="col-sm-2 col-form-label">Monday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilityMon" ng-model="availabilityMon" id="availabilityMon"
+                                        class="form-control" type="text" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilityMon.$invalid && createGroupForm2.availabilityMon.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilityMon.$invalid && createGroupForm2.availabilityMon.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="availabilityTues" class="col-sm-2 col-form-label">Tuesday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilityTues" ng-model="availabilityTues" class="form-control"
+                                        type="text" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilityTues.$invalid && createGroupForm2.availabilityTues.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilityTues.$invalid && createGroupForm2.availabilityTues.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="availabilityWed" class="col-sm-2 col-form-label">Wednesday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilityWed" class="form-control" type="text"
+                                        ng-model="availabilityWed" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilityWed.$invalid && createGroupForm2.availabilityWed.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilityWed.$invalid && createGroupForm2.availabilityWed.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="availabilityThurs" class="col-sm-2 col-form-label">Thursday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilityThurs" class="form-control" type="text"
+                                        ng-model="availabilityThurs" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilityThurs.$invalid && createGroupForm2.availabilityThurs.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilityThurs.$invalid && createGroupForm2.availabilityThurs.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="availabilityFri" class="col-sm-2 col-form-label">Friday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilityFri" class="form-control" type="text"
+                                        ng-model="availabilityFri" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilityFri.$invalid && createGroupForm2.availabilityFri.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilityFri.$invalid && createGroupForm2.availabilityFri.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="availabilitySat" class="col-sm-2 col-form-label">Saturday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilitySat" ng-model="availabilitySat" class="form-control"
+                                        type="text" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilitySat.$invalid && createGroupForm2.availabilitySat.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilitySat.$invalid && createGroupForm2.availabilitySat.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="availabilitySun" class="col-sm-2 col-form-label">Sunday</label>
+                            <div class="col-sm-10">
+                                <div id="datetimepickerDate" class="input-group timerange">
+                                    <input name="availabilitySun" class="form-control" ng-model="availabilitySun"
+                                        type="text" ng-blur="availabilityChange()"
+                                        ng-class="{ 'is-invalid' : createGroupForm2.availabilitySun.$invalid && createGroupForm2.availabilitySun.$touched }">
+                                    <span class="input-group-text" style="">
+                                        <i aria-hidden="true" class="fa fa-calendar"></i>
+                                    </span>
+                                    <span class="invalid-feedback"
+                                        ng-show="createGroupForm2.availabilitySun.$invalid && createGroupForm2.availabilitySun.$touched"
+                                        class="help-block">Ending
+                                        time should be later than starting time</span>
+                                </div>
                             </div>
                         </div>
                     </form>
+                    <button class="btn btn-dark btn-block" ng-click="submitForm()" type="button" style="color: white"
+                        ng-disabled="!haveAvailability">Join Group</button>
                 </div>
             </div>
         </div>
-        <div class="card mb-3" ng-if="inGroup.length==0">
-            <div class="card-header">Join event</div>
-            <div class="card-body">
-                <p>Please state your best availability for each weekday. Leave it blank if you are not
-                    available the
-                    whole day.</p>
-                <form id="createGroupForm2" name="createGroupForm2" novalidate>
-                    <div class="form-group row">
-                        <label for="availabilityMon" class="col-sm-2 col-form-label">Monday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilityMon" ng-model="availabilityMon" id="availabilityMon"
-                                    class="form-control" type="text" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilityMon.$invalid && createGroupForm2.availabilityMon.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilityMon.$invalid && createGroupForm2.availabilityMon.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="availabilityTues" class="col-sm-2 col-form-label">Tuesday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilityTues" ng-model="availabilityTues" class="form-control"
-                                    type="text" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilityTues.$invalid && createGroupForm2.availabilityTues.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilityTues.$invalid && createGroupForm2.availabilityTues.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="availabilityWed" class="col-sm-2 col-form-label">Wednesday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilityWed" class="form-control" type="text"
-                                    ng-model="availabilityWed" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilityWed.$invalid && createGroupForm2.availabilityWed.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilityWed.$invalid && createGroupForm2.availabilityWed.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="availabilityThurs" class="col-sm-2 col-form-label">Thursday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilityThurs" class="form-control" type="text"
-                                    ng-model="availabilityThurs" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilityThurs.$invalid && createGroupForm2.availabilityThurs.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilityThurs.$invalid && createGroupForm2.availabilityThurs.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="availabilityFri" class="col-sm-2 col-form-label">Friday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilityFri" class="form-control" type="text"
-                                    ng-model="availabilityFri" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilityFri.$invalid && createGroupForm2.availabilityFri.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilityFri.$invalid && createGroupForm2.availabilityFri.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="availabilitySat" class="col-sm-2 col-form-label">Saturday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilitySat" ng-model="availabilitySat" class="form-control"
-                                    type="text" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilitySat.$invalid && createGroupForm2.availabilitySat.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilitySat.$invalid && createGroupForm2.availabilitySat.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="availabilitySun" class="col-sm-2 col-form-label">Sunday</label>
-                        <div class="col-sm-10">
-                            <div id="datetimepickerDate" class="input-group timerange">
-                                <input name="availabilitySun" class="form-control" ng-model="availabilitySun"
-                                    type="text" ng-blur="availabilityChange()"
-                                    ng-class="{ 'is-invalid' : createGroupForm2.availabilitySun.$invalid && createGroupForm2.availabilitySun.$touched }">
-                                <span class="input-group-text" style="">
-                                    <i aria-hidden="true" class="fa fa-calendar"></i>
-                                </span>
-                                <span class="invalid-feedback"
-                                    ng-show="createGroupForm2.availabilitySun.$invalid && createGroupForm2.availabilitySun.$touched"
-                                    class="help-block">Ending
-                                    time should be later than starting time</span>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <button class="btn btn-dark btn-block" ng-click="submitForm()" type="button" style="color: white"
-                    ng-disabled="!haveAvailability">Join Group</button>
-            </div>
+        <div ng-if="eventInfo.IsClosed">
+            <p class="text-center">This event is closed. Please go home page and search again.</p>
         </div>
     </div>
 </body>

@@ -33,6 +33,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
 
     var eventID = $location.search().id;
     var quitEventID = $location.search().quit;
+    var oldJoinID = $location.search().oldJoin;
     //console.log(eventID);
 
     $scope.newNotification;
@@ -518,8 +519,8 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
 
     var createGroupForm = document.getElementById("createGroupForm2");
     $scope.submitForm = function () {
-        if (quitEventID) {
-            $scope.quitGroup(quitEventID);
+        if (quitEventID && oldJoinID) {
+            $scope.quitGroup(quitEventID, oldJoinID);
         }
         var data = {
             memberId: memberId,
@@ -541,11 +542,11 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
     }
 
 
-    $scope.quitGroup = function (id) {
+    $scope.quitGroup = function (id, oldJoinID) {
         var dest = baseUrl + '/QuitEvent';
         var postData = {
             eventId: id ? id : eventID,
-            joinId: $scope.eventInfo.JoinID
+            joinId: oldJoinID ? oldJoinID : $scope.eventInfo.JoinID
         }
 
         $.ajax(dest, {

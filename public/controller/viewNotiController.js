@@ -74,11 +74,12 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
         })
     }
 
-    $scope.viewEvent = function (eventID, oldeventID) {
+    $scope.viewEvent = function (eventID, oldeventID, oldjoinID) {
         clearInterval(interval)
         $location.path('viewEvent').search({
             id: eventID,
-            quit: oldeventID
+            quit: oldeventID,
+            oldJoin: oldjoinID
         });
     }
 });
