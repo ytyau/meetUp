@@ -31,20 +31,7 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
     }
 
     $scope.newNotification;
-    getNoti.pullNoti(memberId).then(function (res) {
-        $scope.allNotification = angular.copy(res.data);
-        $scope.newNotification = $scope.allNotification.filter(a => a.IsRead == false)
-        $scope.allNotification = $scope.allNotification.map((a) => {
-            if (a.CourseRecommendation) {
-                a.CourseRecommendation = JSON.parse(a.CourseRecommendation);
-            }
-            return a
-        })
-        console.dir($scope.allNotification);
-    }).catch(function (err) {
-        console.log(err)
-    })
-    let interval = setInterval(function () {
+    if (memberId) {
         getNoti.pullNoti(memberId).then(function (res) {
             $scope.allNotification = angular.copy(res.data);
             $scope.newNotification = $scope.allNotification.filter(a => a.IsRead == false)
@@ -54,11 +41,35 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
                 }
                 return a
             })
-            //console.dir($scope.newNotification);
+            console.dir($scope.allNotification);
         }).catch(function (err) {
             console.log(err)
         })
-    }, 3000);
+    } else {
+        memberId = $cookies.get(cookies_memberId)
+    }
+
+    let interval;
+    if (memberId) {
+        interval = setInterval(function () {
+            getNoti.pullNoti(memberId).then(function (res) {
+                $scope.allNotification = angular.copy(res.data);
+                $scope.newNotification = $scope.allNotification.filter(a => a.IsRead == false)
+                $scope.allNotification = $scope.allNotification.map((a) => {
+                    if (a.CourseRecommendation) {
+                        a.CourseRecommendation = JSON.parse(a.CourseRecommendation);
+                    }
+                    return a
+                })
+                //console.dir($scope.newNotification);
+            }).catch(function (err) {
+                console.log(err)
+            })
+        }, 3000);
+    } else {
+        clearInterval(interval);
+    }
+
 
     $scope.markAsRead = function (NotificationID) {
         let url = baseUrl + '/ReadNotification';
@@ -74,11 +85,12 @@ app.controller('ViewNotiController', function ($scope, $filter, $cookies, getNot
         })
     }
 
-    $scope.viewEvent = function (eventID, oldeventID) {
+    $scope.viewEvent = function (eventID, oldeventID, oldjoinID) {
         clearInterval(interval)
         $location.path('viewEvent').search({
             id: eventID,
-            quit: oldeventID
+            quit: oldeventID,
+            oldJoin: oldjoinID
         });
     }
 });

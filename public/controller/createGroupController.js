@@ -17,15 +17,21 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
     /*********** Check if Logged in End ***********/
 
     $scope.newNotification;
-    let interval = setInterval(function () {
-        getNoti.pullNoti(memberId).then(function (res) {
-            var notification = angular.copy(res.data);
-            $scope.newNotification = notification.filter(a => a.IsRead == false)
-            //console.log($scope.newNotification);
-        }).catch(function (err) {
-            console.log(err)
-        })
-    }, 3000);
+    let interval;
+    if ($scope.memberId) {
+        interval = setInterval(function () {
+            getNoti.pullNoti($scope.memberId).then(function (res) {
+                var notification = angular.copy(res.data);
+                $scope.newNotification = notification.filter(a => a.IsRead == false)
+                //console.log($scope.newNotification);
+            }).catch(function (err) {
+                console.log(err)
+            })
+        }, 3000);
+    } else {
+        clearInterval(interval);
+    }
+
 
     $scope.categorySelected = '';
     $scope.displayCourseList = [];

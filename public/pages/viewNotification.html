@@ -30,9 +30,10 @@
                         Would you like to switch from <a href=""
                             ng-click="viewEvent(recommendation.OldEventID)">{{recommendation.OldEventTitle}}</a>
                         to <a href="" ng-click="viewEvent(recommendation.EventID)">{{recommendation.EventTitle}}</a>?
-                        They need {{recommendation.LackMember}} people now!
+                        They need {{recommendation.LackMember>0? recommendation.LackMember : 0}} people now!
                         <button type="button" class="mt-4 mb-4 btn btn-outline-dark btn-block"
-                            ng-click="viewEvent(recommendation.EventID,recommendation.OldEventID)">Quit the old one and
+                            ng-click="viewEvent(recommendation.EventID,recommendation.OldEventID, recommendation.JoinID)">Quit
+                            the old one and
                             join the new one</button>
                     </div>
 
