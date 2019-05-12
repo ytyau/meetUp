@@ -167,35 +167,49 @@ app.post('/SignIn', async function (req, res) {
 
 /********** Create Event Start **********/
 app.post('/CreateEvent', async function (req, res) {
-    var memberId = req.body['memberId'];
-    var availableTime = req.body['availableTime'];
-    var duration = req.body['duration'];
-    var repeatBy = req.body['repeatBy'];
-    var location = req.body['location'];
-    var minParticipant = req.body['minParticipant'];
-    var maxParticipant = req.body['maxParticipant'];
-    var course = req.body['course'];
-    var level = req.body['level'];
-    var title = req.body['title'];
-    var content = req.body['content'];
+    var input = {};
+    input.memberId = req.body['memberId'];
+    input.availableTime = req.body['availableTime'];
+    input.duration = req.body['duration'];
+    input.repeatBy = req.body['repeatBy'];
+    input.location = req.body['location'];
+    input.minParticipant = req.body['minParticipant'];
+    input.maxParticipant = req.body['maxParticipant'];
+    input.course = req.body['course'];
+    input.level = req.body['level'];
+    input.title = req.body['title'];
+    input.content = req.body['content'];
 
-    if (!memberId || !availableTime || !duration || !repeatBy || !location || !minParticipant || !maxParticipant || !course || !level || !title || !content) {
-        console.dir(req);
+    if (!input.memberId || !input.availableTime || !input.duration || !input.repeatBy || !input.location || !input.minParticipant || !input.maxParticipant || !input.course || !input.level || !input.title || !input.content) {
+        console.dir(input);
         res.status(400).send("Please specify all fields.");
     } else {
         try {
-            var eventId = uuidv1();
-            var query = "INSERT INTO meetUpDB.dbo.Event (EventID, AvailableTime, Duration, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + availableTime + "', '" + duration + "', '" + repeatBy + "', '" + location + "', " + minParticipant + ", " + maxParticipant + ", '" + course + "', '" + level + "', '" + title + "', '" + content + "');";
-            // console.log(query);
-            var result = await sql.query(query);
-            // console.dir(result);
-            if (result.rowsAffected > 0) {
-                // Join event here
-                res.redirect('/JoinEvent?memberId=' + memberId + "&eventId=" + eventId + "&availableTime=" + availableTime);
-            } else {
-                console.log('Error occurred in create event')
-                console.log(query);
-                res.status(500).send('Server error.');
+            // First check the availabeTime > Duration
+            var durationInMinutes = GetTotalMintiesFromTimeStr(input.duration);
+            FiliterMutualTimeFromDuration(input.availableTime, durationInMinutes);
+
+            if (Object.keys(input.availableTime).length > 0)
+            {
+                // Insert Record to db
+                var eventId = uuidv1();
+                console.log(JSON.stringify(input.availableTime));
+                var query = "INSERT INTO meetUpDB.dbo.Event (EventID, AvailableTime, Duration, RepeatBy, Location, MinParticipant, MaxParticipant, Course, Level, Title, Content) VALUES ('" + eventId + "', '" + JSON.stringify(input.availableTime) + "', '" + input.duration + "', '" + input.repeatBy + "', '" + input.location + "', " + input.minParticipant + ", " + input.maxParticipant + ", '" + input.course + "', '" + input.level + "', '" + input.title.replace("'", "''") + "', '" + input.content + "');";
+                // console.log(query);
+                var result = await sql.query(query);
+                // console.dir(result);
+                if (result.rowsAffected > 0) {
+                    // Join event here
+                    res.redirect('/JoinEvent?memberId=' + input.memberId + "&eventId=" + eventId + "&availableTime=" + JSON.stringify(input.availableTime));
+                } else {
+                    console.log('Error occurred in create event')
+                    console.log(query);
+                    res.status(500).send('Server error.');
+                }
+            }
+            else
+            {
+                res.status(400).send('Some of the timeslot less than the course duration.');
             }
         } catch (err) {
             console.log('Error occurred in create event');
@@ -353,10 +367,12 @@ app.get('/JoinEvent', async function (req, res) {
         res.status(400).send("Please specify all fields.");
     } else {
         try {
-            var result = await sql.query("Select AvailableTime, MaxParticipant, CurrentMemberCnt, IsClosed From Event Where EventID = '" + eventId + "'");
+            var result = await sql.query("Select AvailableTime, MaxParticipant, CurrentMemberCnt, IsClosed, Duration From Event Where EventID = '" + eventId + "'");
             if (result.recordset.length > 0) {
                 if (result.recordset[0].CurrentMemberCnt < result.recordset[0].MaxParticipant && !result.recordset[0].IsClosed) {
                     var mutualTime = GetMutualAvailableTimeSlot(result.recordset[0].AvailableTime, availableTime);
+                    var durationInMinutes = GetTotalMintiesFromTimeStr(result.recordset[0].Duration);
+                    FiliterMutualTimeFromDuration(mutualTime, durationInMinutes);
                     if (Object.keys(mutualTime).length > 0)
                     {
                         query = "Update Event Set AvailableTime = '" + JSON.stringify(mutualTime) + "' Where EventID = '" + eventId + "'";
@@ -834,7 +850,7 @@ function GetMutualAvaiableHourMinute(time1, time2)
 
 function GetTimeRangeObjFromStr(period)
 {
-    var matches = period.match(/([0-9]{2}):([0-9]{2}) - ([0-9]{2}):([0-9]{2})/);
+    var matches = period.match(/([0-9]{1,2}):([0-9]{1,2}) - ([0-9]{1,2}):([0-9]{1,2})/);
     if (matches.length === 5) {
         return {
             from: {
@@ -933,14 +949,103 @@ function AvailableTimeExtend1Hour(availableTime)
         }
     }
 }
+
+function FiliterMutualTimeFromDuration(mutualTime, durationInMinutes)
+{
+    if (typeof(mutualTime) == "string")
+    {
+        mutualTime = JSON.parse(mutualTime);
+    }
+    durationInMinutes = Number(durationInMinutes);
+    // console.log(mutualTime.mon);
+    if (mutualTime.mon)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.mon);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        // console.log('periodInMinutes: ' + periodInMinutes);
+        // console.log('durationInMinutes: ' + durationInMinutes);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.mon;
+        }
+    }
+    if (mutualTime.tues)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.tues);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.tues;
+        }
+    }
+    if (mutualTime.wed)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.wed);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.wed;
+        }
+    }
+    if (mutualTime.thurs)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.thurs);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.thurs;
+        }
+    }
+    if (mutualTime.fri)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.fri);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.fri;
+        }
+    }
+    if (mutualTime.sat)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.sat);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.sat;
+        }
+    }
+    if (mutualTime.sun)
+    {
+        var period = GetTimeRangeObjFromStr(mutualTime.sun);
+        var periodInMinutes = (Number(period.to.hour) - Number(period.from.hour)) * 60 + Number(period.to.minute) - Number(period.from.minute);
+        if (periodInMinutes < durationInMinutes)
+        {
+            delete mutualTime.sun;
+        }
+    }
+}
+
+function GetTotalMintiesFromTimeStr(time)
+{
+    var matches = time.match(/([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})/);
+    if (matches.length === 2)
+    {
+        return (Number(matches[1]) * 60 + Number(matches[2]));
+    }
+    else
+        return null;
+}
 /********** Utility End **********/
 
 /********** Debug Start **********/
 app.post('/Debug', async function (req, res)
 {
     var j1 = req.body['j1'];
+    // j1 = JSON.parse(j1);
     var j2 = req.body['j2'];
-    res.send(GetMutualAvailableTimeSlot(j1, j2));
+    j2 = Number(j2);
+    FiliterMutualTimeFromDuration(j1, j2);
+    res.send(j1);
 });
 
 app.get('/NormaliseDb', async function (req, res)
