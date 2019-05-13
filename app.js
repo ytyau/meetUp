@@ -29,6 +29,8 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 
 var _ = require('lodash');
+
+var schedule = require('node-schedule');
 /********** Requrire End **********/
 
 /********** Connect DB Start **********/
@@ -668,14 +670,7 @@ function SendMail(toMail, subject, content) {
 /********** Generate Recommendation Start **********/
 app.get('/GenerateRecommendation', async function (req, res) {
     try {
-        var memberToBeHandled = await sql.query("Select JoinEvent.JoinID, JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration, Event.Title From Event, JoinEvent Where Event.EventID = JoinEvent.EventID And JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
-        if (memberToBeHandled.recordset.length > 0)
-        {
-            for (var i = 0; i < memberToBeHandled.recordset.length; i++)
-            {
-                await GenSuggestionForMember(memberToBeHandled.recordset[i].JoinID, memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].RepeatBy, memberToBeHandled.recordset[i].Duration, memberToBeHandled.recordset[i].Title);
-            }
-        }
+        await GenerateSuggestions();
         res.send("Finished");
     } catch (err) {
         console.log('Error occurred in GenerateRecommendation');
@@ -683,6 +678,26 @@ app.get('/GenerateRecommendation', async function (req, res) {
         res.status(500).send(err);
     }
 });
+
+var rule = new schedule.RecurrenceRule();
+rule.dayOfWeek = [0];
+rule.hour = 0;
+rule.minute = 0;
+var scheduler = schedule.scheduleJob(rule, async function(){
+  await GenerateSuggestions();
+});
+
+async function GenerateSuggestions()
+{
+    var memberToBeHandled = await sql.query("Select JoinEvent.JoinID, JoinEvent.MemberID, JoinEvent.EventID, JoinEvent.AvailableTime, Course, Level, Location, RepeatBy, Duration, Event.Title From Event, JoinEvent Where Event.EventID = JoinEvent.EventID And JoinEvent.IsQuit = 0 And Event.IsClosed = 0");
+    if (memberToBeHandled.recordset.length > 0)
+    {
+        for (var i = 0; i < memberToBeHandled.recordset.length; i++)
+        {
+            await GenSuggestionForMember(memberToBeHandled.recordset[i].JoinID, memberToBeHandled.recordset[i].MemberID, memberToBeHandled.recordset[i].EventID, memberToBeHandled.recordset[i].AvailableTime, memberToBeHandled.recordset[i].Course, memberToBeHandled.recordset[i].Level, memberToBeHandled.recordset[i].Location, memberToBeHandled.recordset[i].RepeatBy, memberToBeHandled.recordset[i].Duration, memberToBeHandled.recordset[i].Title);
+        }
+    }
+}
 
 async function GenSuggestionForMember(joinId, memberId, currentEventId, availableTime, course, level, location, repeatBy, duration, title)
 {
