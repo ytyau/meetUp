@@ -27,10 +27,19 @@
                 <div class="card-body">
                     <p>{{noti.NotiContent}}</p>
                     <div ng-if="noti.CourseRecommendation" ng-repeat="recommendation in noti.CourseRecommendation">
-                        Would you like to switch from <a href=""
-                            ng-click="viewEvent(recommendation.OldEventID)">{{recommendation.OldEventTitle}}</a>
-                        to <a href="" ng-click="viewEvent(recommendation.EventID)">{{recommendation.EventTitle}}</a>?
-                        They need {{recommendation.LackMember>0? recommendation.LackMember : 0}} people now!
+                        <p>
+                            <span ng-if="!recommendation.DifferentAvailableTime">We found a course that suits your
+                                availability</span><span ng-if="!recommendation.DifferentDuration"> and duration
+                                requirement</span>!
+                        </p>
+                        <p>Would you like to switch from <a href=""
+                                ng-click="viewEvent(recommendation.OldEventID)">{{recommendation.OldEventTitle}}</a>
+                            to <a href=""
+                                ng-click="viewEvent(recommendation.EventID)">{{recommendation.EventTitle}}</a>?
+                            <span ng-if="recommendation.LackMember<=0">The group is ready to start anytime!</span>
+                            <span ng-if="recommendation.LackMember>0">They need {{recommendation.LackMember}} people
+                                now!
+                            </span></p>
                         <button type="button" class="mt-4 mb-4 btn btn-outline-dark btn-block"
                             ng-click="viewEvent(recommendation.EventID,recommendation.OldEventID, recommendation.JoinID)">Quit
                             the old one and
