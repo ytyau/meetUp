@@ -1,3 +1,8 @@
 13336 author ytyau
 2508 author Chan Pak shing
    7 author Not Committed Yet
+Since ytyau (Eva) is responsible the front end web app, which used AngularJS as the framework, involving large amount of HTML codes, it could possibly cause large difference in number of rows. Also, ericc0504 (Chan Pak Shing) focusing on the server side logic, providing APIs for all operations such as create group, join group, generate group recommendation etc. Only have to handle the logic so not many codes are needed.
+
+Name              Contributions
+Chan Pak Shing    50%
+Yau Tsz Yan       50%
