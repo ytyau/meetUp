@@ -57,6 +57,27 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
     var url2 = baseUrl + '/GetEventMember?eventId=' + eventID;
     $http.get(url2).then(function (response) {
         $scope.memberInfo = angular.copy(response.data);
+        $scope.memberInfo.forEach(element => {
+            if (element.Age < 3) {
+                element.displayAge = "Aged under 3";
+            } else if (element.Age > 3 && element.Age < 11) {
+                element.displayAge = "Aged 4 - 10";
+            } else if (element.Age > 10 && element.Age < 16) {
+                element.displayAge = "Aged 11 - 15";
+            } else if (element.Age > 15 && element.Age < 21) {
+                element.displayAge = "Aged 16 - 20";
+            } else if (element.Age > 20 && element.Age < 31) {
+                element.displayAge = "Aged 21 - 30";
+            } else if (element.Age > 30 && element.Age < 41) {
+                element.displayAge = "Aged 31 - 40";
+            } else if (element.Age > 40 && element.Age < 51) {
+                element.displayAge = "Aged 41 - 50";
+            } else if (element.Age > 50 && element.Age < 61) {
+                element.displayAge = "Aged 51 - 60";
+            } else {
+                element.displayAge = "Aged 61 or above";
+            }
+        });
         console.dir($scope.memberInfo);
         $scope.inGroup = $scope.memberInfo.filter(a =>
             a.MemberID == memberId
@@ -524,9 +545,6 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
 
     var createGroupForm = document.getElementById("createGroupForm2");
     $scope.submitForm = function () {
-        if (quitEventID && oldJoinID) {
-            $scope.quitGroup(quitEventID, oldJoinID);
-        }
         var data = {
             memberId: memberId,
             eventId: eventID,
@@ -539,6 +557,9 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
             params: data
         }).then(function (response) {
             console.log(response.data);
+            if (quitEventID && oldJoinID) {
+                $scope.quitGroup(quitEventID, oldJoinID);
+            }
             alert(response.data)
         }).catch(function (err) {
             alert(err.data);

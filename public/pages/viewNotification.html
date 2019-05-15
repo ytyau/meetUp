@@ -28,9 +28,19 @@
                     <p>{{noti.NotiContent}}</p>
                     <div ng-if="noti.CourseRecommendation" ng-repeat="recommendation in noti.CourseRecommendation">
                         <p>
-                            <span ng-if="!recommendation.DifferentAvailableTime">We found a course that suits your
-                                availability</span><span ng-if="!recommendation.DifferentDuration"> and duration
-                                requirement</span>!
+                            <span ng-if="!recommendation.DifferentAvailableTime && !recommendation.DifferentDuration">We
+                                found a course that suits your
+                                availability and duration
+                                requirement!</span>
+                            <span ng-if="!recommendation.DifferentAvailableTime && recommendation.DifferentDuration">We
+                                found a course that suits your
+                                availability but duration requirement is a bit different.</span>
+                            <span ng-if="recommendation.DifferentAvailableTime && !recommendation.DifferentDuration">We
+                                found a course that suits your
+                                duration requirement but available in another time.</span>
+                            <span ng-if="recommendation.DifferentAvailableTime && !ecommendation.DifferentDuration">We
+                                found a course that you might want although availability and duration requirement is a
+                                bit different.</span>
                         </p>
                         <p>Would you like to switch from <a href=""
                                 ng-click="viewEvent(recommendation.OldEventID)">{{recommendation.OldEventTitle}}</a>

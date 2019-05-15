@@ -379,6 +379,7 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
             //empty title
             window.alert("have error")
         } else {
+            console.dir($scope.userInput);
             var finalCourse;
             if ($scope.userInput.courseObj) {
                 finalCourse = JSON.parse($scope.userInput.courseObj).name
@@ -611,7 +612,7 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
     }
     /*********** Timepicker control ***********/
 
-    $scope.$on("$destroy", function(){
+    $scope.$on("$destroy", function () {
         clearInterval(interval);
     });
 })
