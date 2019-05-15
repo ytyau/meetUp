@@ -560,6 +560,7 @@ app.controller('ViewEventController', function ($scope, $http, $location, $windo
             if (quitEventID && oldJoinID) {
                 $scope.quitGroup(quitEventID, oldJoinID);
             }
+            location.reload();
             alert(response.data)
         }).catch(function (err) {
             alert(err.data);
