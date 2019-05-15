@@ -681,8 +681,8 @@ app.get('/GenerateRecommendation', async function (req, res) {
 });
 
 var rule = new schedule.RecurrenceRule();
-rule.dayOfWeek = [0];
-rule.hour = 0;
+rule.dayOfWeek = [0]; // Sunday
+rule.hour = 9; // 9am
 rule.minute = 0;
 var scheduler = schedule.scheduleJob(rule, async function(){
   await GenerateSuggestions();
