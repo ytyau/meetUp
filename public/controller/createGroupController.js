@@ -381,10 +381,12 @@ app.controller('CreateGroupController', function ($scope, $location, $cookieStor
         } else {
             console.dir($scope.userInput);
             var finalCourse;
-            if ($scope.userInput.courseObj) {
-                finalCourse = JSON.parse($scope.userInput.courseObj).name
+            courseObj = $scope.userInput.courseObj ? JSON.parse($scope.userInput.courseObj) : null;
+            if (courseObj && courseObj.name) {
+                finalCourse = courseObj.name
             } else {
                 finalCourse = $scope.userInput.customCourse
+                console.log($scope.userInput.customCourse);
             }
             var postData = {
                 duration: $scope.userInput.durationHr + ":" + $scope.userInput.durationMin + ":00",
